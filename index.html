@@ -1,1 +1,43 @@
-sb_publishable_Q2yRz-BfbLIIAYLYfY-X0A_P--9FEja
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+
+    function myDoc() {
+      return /databases/$(database)/documents/members/$(request.auth.token.email.lower());
+    }
+
+    function isMember() {
+      return signedIn() && exists(myDoc());
+    }
+
+    function isCoach() {
+      return isMember() && get(myDoc()).data.role == 'coach';
+    }
+
+    match /members/{email} {
+      allow read: if isCoach() || (signedIn() && request.auth.token.email.lower() == email);
+      allow write: if isCoach();
+    }
+
+    match /seasons/{id} {
+      allow read: if isMember();
+      allow write: if isCoach();
+    }
+
+    match /players/{id} {
+      allow read: if isMember();
+      allow write: if isCoach();
+    }
+
+    match /abs/{id} {
+      allow read: if isMember();
+      allow write: if isCoach();
+    }
+  }
+}
