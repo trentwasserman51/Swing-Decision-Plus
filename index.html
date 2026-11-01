@@ -1,43 +1,319 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SWING DECISION PLUS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&display=swap">
+<style>
+:root{--bg:#0a1f44;--card:#12306b;--fg:#d6e4ff;--mut:#8fb0e8;--line:#24489a;--grass:#1d4ea8;--acc:#ffd23f;--accfg:#0a1f44;--good:#4ade80;--bad:#f87171;color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 Barlow,system-ui,sans-serif}
+main{max-width:480px;margin:0 auto;padding:14px 14px 40px}
+h1{font:700 30px/1 "Barlow Condensed","Arial Narrow",sans-serif;margin:0 0 12px;letter-spacing:.5px;border-bottom:4px solid #ffd23f;padding-bottom:8px}
+h2{font:700 24px/1.1 "Barlow Condensed","Arial Narrow",sans-serif;margin:14px 0 6px}
+.row{display:flex;gap:8px}
+select,input,button{font:inherit;color:inherit}
+select,input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:44px}
+button{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:44px;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.on{background:var(--acc);color:var(--accfg);border-color:var(--acc);font-weight:600}
+nav{display:flex;gap:6px;margin:0 0 12px}
+nav button{flex:1;font:700 18px "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.5px}
+svg{width:100%;height:auto;display:block;border-radius:10px;touch-action:manipulation;background:var(--card)}
+.hint{color:var(--mut);font-size:14px;margin:8px 0}
+.count{display:flex;align-items:baseline;gap:10px;margin:8px 0}
+.count b{font:700 52px/1 "Barlow Condensed","Arial Narrow",sans-serif}
+.count span{color:var(--mut);font-size:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{min-height:40px;padding:6px 12px}
+.stat{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin:10px 0}
+.stat div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 2px}
+.stat b{display:block;font:700 26px/1 "Barlow Condensed","Arial Narrow",sans-serif}
+.stat span{color:var(--mut);font-size:12px}
+.note{background:var(--card);border-left:4px solid var(--acc);padding:10px 12px;border-radius:6px;margin:10px 0}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600;font-size:13px}
+th:first-child,td:first-child{text-align:left;font-weight:600}
+td button.lnk{background:none;border:0;padding:6px 0;min-height:40px;text-align:left;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.bad{color:var(--bad);font-weight:600}.good{color:var(--good);font-weight:600}
+li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);list-style:none}
+li span{flex:1}ul{padding:0;margin:0}small{color:var(--mut)}
+.sheet th:first-child,.sheet td:first-child{position:sticky;left:0;background:var(--bg)}.sheet td,.sheet th{padding:8px;white-space:nowrap}.frm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.frm label{font-size:12px;color:var(--mut)}.frm input{width:100%;min-height:40px}
+.brand{margin:0 0 12px;padding:0 0 10px;border-bottom:4px solid #ffd23f}.brand svg{width:100%;max-width:300px;height:auto;background:none;border-radius:0}
+.seasons{display:flex;flex-direction:column;gap:10px;margin:8px 0}
+.season{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:16px;text-align:left;border-radius:12px;min-height:76px}
+.season b{font:700 30px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.5px;color:var(--acc)}
+.season span{color:var(--mut);font-size:14px}
+.srow{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+.srow b{font:700 26px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.5px;color:var(--acc)}
+.home .brand svg{max-width:420px;display:block;margin:0 auto}
+.srt{background:none;border:0;min-height:36px;padding:4px 2px;color:var(--mut);font:600 13px Barlow,system-ui,sans-serif;white-space:nowrap;cursor:pointer;border-radius:6px}.srt.on{color:var(--acc)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;display:none}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<main>
+<h1 class="brand"><svg viewBox="0 0 500 140" role="img" aria-label="SWING DECISION PLUS"><g transform="translate(0,10)"><rect width="120" height="120" rx="26" fill="#0a1f44"/><rect x="2" y="2" width="116" height="116" rx="24" fill="none" stroke="#1d4ea8" stroke-width="3"/><g stroke="#9db5e0" stroke-width="2" opacity=".55"><path d="M47.3 20V80M72.7 20V80M22 40H98M22 60H98"/></g><rect x="22" y="20" width="76" height="60" rx="3" fill="none" stroke="#9db5e0" stroke-width="4"/><path d="M60 36V64M46 50H74" stroke="#ffd23f" stroke-width="9" stroke-linecap="round"/><path d="M40 92H80V98L60 108L40 98Z" fill="#ffd23f"/></g><text x="140" y="80" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="700" font-size="58" fill="#d6e4ff" textLength="350" lengthAdjust="spacingAndGlyphs">SWING DECISION</text><text x="142" y="126" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="700" font-size="40" fill="#ffd23f" textLength="118" lengthAdjust="spacingAndGlyphs">PLUS</text><rect x="276" y="106" width="214" height="6" rx="3" fill="#ffd23f"/></svg></h1>
+<div id="sbar"></div>
+<nav id="tabs"></nav>
+<div id="app"><p class="hint">Connecting...</p></div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+// ===== PASTE YOUR FIREBASE CONFIG HERE (Firebase console > Project settings > Your apps) =====
+var FIREBASE_CONFIG={
+ apiKey:"AIzaSyBudN4U1EoJiQurQicex5FQn0meT7wGTKc",
+ authDomain:"swing-decision-plus.firebaseapp.com",
+ projectId:"swing-decision-plus",
+ storageBucket:"swing-decision-plus.firebasestorage.app",
+ messagingSenderId:"819771148382",
+ appId:"1:819771148382:web:e346f5431ddac0ff6a8ccf"
+};
+// =============================================================================================
+var mem=[],me=null;
+var db=null,user=null,canEdit=false,ready=false,players=[],abs=[],tab='team',pid=null,flt='All',cnt='All',ptf='All',lp='';
+var allP=[],allA=[],seasons=[],season=null,LEG='fall-2026';
+var cur={b:0,s:0,pitches:[]},P={x:null,y:null,t:'',q:'',ip:false};
+var KEYS=['0-0','0-1','0-2','1-0','1-1','1-2','2-0','2-1','2-2','3-0','3-1','3-2'];
+function $(s){return document.querySelector(s)}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function toast(m){var t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(function(){t.style.display='none'},2000)}
+function swung(p){return p.out==='sm'||p.out==='foul'||p.out==='ip'}
+function good(p){return swung(p)===p.inz}
+function pct(n,d){return d?Math.round(100*n/d)+'%':'-'}
+function inS(x){return (x.season||LEG)===season}
+function derive(){players=allP.filter(inS).sort(function(a,z){return a.name.localeCompare(z.name)});abs=allA.filter(inS)}
+function sList(){var l=seasons.slice();if(!l.some(function(x){return x.id===LEG})&&(allP.some(function(p){return !p.season})||allA.some(function(a){return !a.season})))l.push({id:LEG,name:'Fall 2026',at:0});return l.sort(function(x,y){return (y.at||0)-(x.at||0)})}
+function sName(id){var x=sList().filter(function(q){return q.id===id})[0];return x?x.name:'Season'}
+function sMeta(id){var ps=allP.filter(function(p){return (p.season||LEG)===id}),n=allA.filter(function(a){return (a.season||LEG)===id}).length;ps.forEach(function(p){n+=Number(p.st&&p.st.pa)||0});return ps.length+' players · '+n+' PA'}
+function homeView(){var l=sList(),act=l.filter(function(x){return !x.archived}),arch=l.filter(function(x){return x.archived}),h='<p class="hint">Choose a season</p><div class="seasons">'+(act.length?act.map(function(x){return '<button class="season" data-season="'+esc(x.id)+'"><b>'+esc(x.name)+'</b><span>'+sMeta(x.id)+'</span></button>'}).join(''):'<p class="hint">No seasons yet.'+(canEdit?' Create your first one below.':'')+'</p>')+'</div>';
+ if(arch.length)h+='<h2>Archived</h2>'+arch.map(function(x){return '<div class="row" style="margin-bottom:6px"><button data-season="'+esc(x.id)+'" style="flex:1;text-align:left">'+esc(x.name)+'</button>'+(canEdit?'<button data-restore="'+esc(x.id)+'">Restore</button>':'')+'</div>'}).join('');
+ if(canEdit)h+='<h2>New season</h2><input id="sn" placeholder="Spring 2027" maxlength="30" aria-label="Season name" style="width:100%"><select id="sc" aria-label="Roster" style="width:100%;margin-top:8px"><option value="">Start with an empty roster</option>'+l.map(function(x){return '<option value="'+esc(x.id)+'">Copy players from '+esc(x.name)+'</option>'}).join('')+'</select><button class="on" id="mkseason" style="width:100%;margin-top:8px">Create season</button><p class="hint">Copying brings over player names only. Stats start at zero.</p>';
+ return h}
+var dl=null;
+function loginView(){return '<h2>Sign in</h2><input id="em" type="email" autocomplete="email" placeholder="Email" style="width:100%"><input id="pw" type="password" autocomplete="current-password" placeholder="Password (6+ characters)" style="width:100%;margin-top:8px"><button class="on" id="signin" style="width:100%;margin-top:8px">Sign in</button><button id="signup" style="width:100%;margin-top:8px">Create account</button><button id="reset" style="width:100%;margin-top:8px">Forgot password</button><p class="hint">Use the email address your coach added to the team.</p>'}
+function verifyView(){return '<h2>Check your email</h2><p class="hint">We sent a link to '+esc(me)+'. Tap it, then come back and tap the button below. Check your spam folder if you do not see it.</p><button class="on" id="verified" style="width:100%">I verified my email</button><button id="resend" style="width:100%;margin-top:8px">Send the email again</button><button id="signout" style="width:100%;margin-top:8px">Sign out</button>'}
+function noAccessView(){return '<h2>Not on the team list yet</h2><p class="hint">You are signed in as '+esc(me)+', but this email has not been added to the team. Ask your coach to add it, then tap Try again.</p><button class="on" id="retry" style="width:100%">Try again</button><button id="signout" style="width:100%;margin-top:8px">Sign out</button>'}
+function accessView(){var l=mem.slice().sort(function(x,y){return (x.role===y.role?0:(x.role==='coach'?-1:1))||x.id.localeCompare(y.id)});
+ return '<h2>Team access</h2><p class="hint">Only these emails can open the app. Coaches can log and edit. Players can view everything.</p><ul>'+l.map(function(m){return '<li><span>'+esc(m.id)+'<br><small>'+(m.role==='coach'?'Coach':'Player')+'</small></span>'+(m.id===me?'<small>You</small>':'<button data-rmmem="'+esc(m.id)+'">Remove</button>')+'</li>'}).join('')+'</ul><input id="mem" type="email" placeholder="Email address" style="width:100%;margin-top:8px"><div class="row" style="margin-top:8px"><button id="addp" style="flex:1">Add player</button><button id="addc" style="flex:1">Add coach</button></div><p class="hint">After you add someone, they open the app and tap Create account with that same email.</p>'}
+function csv(rows){return rows.map(function(r){return r.map(function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')}).join('\r\n')}
+function fname(x){return (sName(season)+' '+x).replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()+'.csv'}
+function sendCsv(rows,label){try{var bl=new Blob(['\ufeff'+csv(rows)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=fname(label);document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);toast('Export ready')}catch(e){toast('Could not export')}}
+function exportStats(){var rows=[SHN];players.forEach(function(p){rows.push([p.name].concat(vals(st(p))))});rows.push(['Team'].concat(vals(sum(players))));sendCsv(rows,'stats')}
+function exportPitches(){var rows=[['Season','Hitter','Pitcher','Date','At-bat result','RBI','QAB','Pitch number','Balls','Strikes','Pitch type','Plate X','Plate Y','In zone','Outcome','Result','Contact','Good decision']];
+ abs.slice().sort(function(x,y){return (x.at||0)-(y.at||0)}).forEach(function(a){a.pitches.forEach(function(p,i){rows.push([sName(season),nm(a.pid),a.pitcher||'',a.at?new Date(a.at).toISOString().slice(0,10):'',a.end,a.rbi||0,a.qab?1:0,i+1,p.b,p.s,p.t||'',p.x,p.y,p.inz?'Y':'N',OL[p.out]||p.out,p.res||'',p.q||'',p.out==='hbp'?'':(good(p)?'Y':'N')])})});
+ sendCsv(rows,'pitches')}
+function toolsView(){var h='';h+='<h2>Export</h2><div class="row"><button id="exs" style="flex:1">Season stats (CSV)</button><button id="exp" style="flex:1">All pitches (CSV)</button></div><p class="hint">Downloads a file you can open in Excel or Google Sheets. The pitch file has one row per pitch for this season.</p>';
+ if(canEdit)h+='<h2>Season settings</h2><div class="row"><input id="rn" value="'+esc(sName(season))+'" maxlength="30" aria-label="Season name"><button id="rename">Rename</button></div><button id="archive" style="width:100%;margin-top:8px">Archive this season</button><p class="hint">Archiving hides the season from the home screen. Nothing is deleted, and you can restore it from the Archived list.</p>';
+ return h}
+function nm(id){var p=players.filter(function(x){return x.id===id})[0];return p?p.name:'Unknown'}
+var TCM=null,fin=null,selPk='',pit='',pf='',pvw='';
+function trk(id){if(!TCM){TCM={};abs.forEach(function(a){var s=TCM[a.pid]||(TCM[a.pid]={qab:0,pa:0,b1:0,b2:0,b3:0,hr:0,bb:0,k:0,rbi:0,sac:0,sf:0,hh:0,ab:0}),e=a.end,l=a.pitches[a.pitches.length-1]||{};s.pa++;s.qab+=a.qab?1:0;s.rbi+=a.rbi||0;s.sac+=a.sac?1:0;s.sf+=a.sf?1:0;if(e==='1B')s.b1++;else if(e==='2B')s.b2++;else if(e==='3B')s.b3++;else if(e==='HR')s.hr++;else if(e==='BB'||e==='HBP')s.bb++;else if(e==='K')s.k++;if(l.out==='ip'&&l.q==='Hard')s.hh++;if(!(e==='BB'||e==='HBP'||a.sac||a.sf))s.ab++})}return TCM[id]||{}}
+function endTxt(l,k){var o={H:0,O:0,K:0,BB:0};l.forEach(function(p){if(p.last&&p.b+'-'+p.s===k){var e=p.end;if(e==='1B'||e==='2B'||e==='3B'||e==='HR')o.H++;else if(e==='Out')o.O++;else if(e==='K')o.K++;else o.BB++}});var r=[];['H','O','K','BB'].forEach(function(x){if(o[x])r.push(o[x]+x)});return r.join(' ')||'-'}
+function tags(x){var t=[];if(x.rbi)t.push(x.rbi+' RBI');if(x.sac)t.push('SAC');if(x.sf)t.push('SF');if(x.qab)t.push('QAB');return t.length?'<br><small>'+t.join(' · ')+'</small>':''}
+function autoQ(){var l=cur.pitches[cur.pitches.length-1]||{};return l.q==='Hard'||fin.end==='BB'||fin.end==='HBP'||cur.pitches.length>=6}
+function finView(){return '<div class="note"><b>'+esc(nm(lp))+' vs '+esc(pit)+': '+fin.end+'</b> ('+cur.pitches.length+' pitches)</div><p class="hint">RBI</p><div class="g5">'+[0,1,2,3,4].map(function(v){return b(v,v,'frbi',fin.rbi===v)}).join('')+'</div><div class="g3">'+b('sac','Sac bunt','ftog',fin.sac)+b('sf','Sac fly','ftog',fin.sf)+b('qab','Quality at-bat','ftog',fin.qab)+'</div><p class="hint">Quality at-bat starts on if the hitter hit it hard, walked, or saw 6 or more pitches. Change it to match your rule.</p><button class="on" id="finsave" style="width:100%">Save at-bat</button><button id="finback" style="width:100%;margin-top:8px">Undo last pitch</button>'}
+function pkey(a){return (a.pitcher||'').trim().toLowerCase()}
+function pitchers(){var m={};abs.forEach(function(a){var k=pkey(a);if(!k)return;(m[k]=m[k]||{k:k,name:a.pitcher.trim(),abs:[]}).abs.push(a)});return Object.keys(m).map(function(k){return m[k]}).sort(function(x,y){return x.name.localeCompare(y.name)})}
+function pname(k){var p=pitchers().filter(function(x){return x.k===k})[0];return p?p.name:k}
+function pas(l){var o={pa:0,ab:0,h:0,bb:0,k:0};l.forEach(function(a){var e=a.end,w=e==='BB'||e==='HBP';o.pa++;if(w)o.bb++;if(e==='K')o.k++;if(e==='1B'||e==='2B'||e==='3B'||e==='HR')o.h++;if(!(w||a.sac||a.sf))o.ab++});o.avg=o.ab?(o.h/o.ab).toFixed(3):'0.000';return o}
+function strikeish(p){return p.out==='cs'||p.out==='sm'||p.out==='foul'||p.out==='ip'}
+function tp(l){var t=l.filter(function(p){return p.t});if(t.length<3)return 'not enough pitches yet';var c={};t.forEach(function(p){c[p.t]=(c[p.t]||0)+1});var best=Object.keys(c).sort(function(a,z){return c[z]-c[a]})[0];return TN[best]+' '+pct(c[best],t.length)+' ('+t.length+' pitches)'}
+function vsP(){var rows=pitchers().map(function(p){var al=p.abs.filter(function(a){return a.pid===pid});if(!al.length)return '';var s=pas(al),c=calc(flat(pid).filter(function(x){return x.pk===p.k}));return '<tr><td><button class="lnk" data-pf="'+p.k+'">'+esc(p.name)+'</button></td><td>'+s.pa+'</td><td>'+s.avg+'</td><td>'+s.k+'</td><td>'+s.bb+'</td><td>'+c.dec+'</td></tr>'}).join('');return rows?'<h2>Against pitchers</h2><div class="wrap"><table><tr><th>Pitcher</th><th>PA</th><th>AVG</th><th>K</th><th>BB</th><th>Good</th></tr>'+rows+'</table></div><p class="hint">Tap a pitcher to filter the count table, zone, and pitch list below.</p>':''}
+function pitcherTable(){var ps=pitchers();if(!ps.length)return '<p class="hint">No pitchers logged yet. Enter the pitcher when you log an at-bat.</p>';var all=flat();return '<div class="wrap"><table><tr><th>Pitcher</th><th>PA</th><th>AVG</th><th>K</th><th>BB</th><th>Zone</th><th>FPS</th></tr>'+ps.map(function(p){var l=all.filter(function(x){return x.pk===p.k}),f=l.filter(function(x){return x.b===0&&x.s===0}),s=pas(p.abs);return '<tr><td><button class="lnk" data-pv="'+p.k+'">'+esc(p.name)+'</button></td><td>'+s.pa+'</td><td>'+s.avg+'</td><td>'+s.k+'</td><td>'+s.bb+'</td><td>'+pct(l.filter(function(x){return x.inz}).length,l.length)+'</td><td>'+pct(f.filter(strikeish).length,f.length)+'</td></tr>'}).join('')+'</table></div><p class="hint">AVG, K, and BB are against your hitters. Zone is the share of his pitches in the zone. FPS is first-pitch strikes.</p>'}
+function pitcherView(){
+ var k=pvw,pp=pitchers().filter(function(x){return x.k===k})[0];
+ if(!pp)return '<button data-back="1">Back to team</button><p class="hint">No at-bats logged for this pitcher yet.</p>';
+ var l=flat().filter(function(x){return x.pk===k}),c=calc(l),s=pas(pp.abs),f=l.filter(function(x){return x.b===0&&x.s===0}),ty=l.filter(function(x){return x.t}),T4=['FB','CH','CB','SL'],
+ mix=T4.map(function(t){return t+' '+pct(ty.filter(function(x){return x.t===t}).length,ty.length)}).join(' · '),
+ rows=KEYS.map(function(q){var lc=l.filter(function(x){return x.b+'-'+x.s===q}),tc=lc.filter(function(x){return x.t});return '<tr><td>'+q+'</td><td>'+lc.length+'</td>'+T4.map(function(t){return '<td>'+pct(tc.filter(function(x){return x.t===t}).length,tc.length)+'</td>'}).join('')+'<td>'+pct(lc.filter(function(x){return x.inz}).length,lc.length)+'</td></tr>'}).join(''),
+ lf=l.filter(function(x){return ptf==='All'||x.t===ptf}),TC={FB:'#ffd23f',CH:'#5be28f',CB:'#c084fc',SL:'#38bdf8'},
+ d=lf.filter(function(x){return x.out!=='hbp'}).map(function(x){var rg=x.key===selPk?'<circle cx="'+x.x+'" cy="'+x.y+'" r="9" fill="none" stroke="var(--acc)" stroke-width="3"/>':'';return rg+'<circle cx="'+x.x+'" cy="'+x.y+'" r="5" fill="'+(TC[x.t]||'#9db5e0')+'" stroke="var(--bg)"/><circle cx="'+x.x+'" cy="'+x.y+'" r="10" fill="transparent" data-pk="'+x.key+'" style="cursor:pointer"/>'}).join(''),hs={};
+ pp.abs.forEach(function(a){(hs[a.pid]=hs[a.pid]||[]).push(a)});
+ return '<button data-back="1">Back to team</button><h2>'+esc(pp.name)+'</h2><div class="stat"><div><b>'+l.length+'</b><span>Pitches</span></div><div><b>'+pct(l.filter(function(x){return x.inz}).length,l.length)+'</b><span>Zone</span></div><div><b>'+pct(f.filter(strikeish).length,f.length)+'</b><span>1st-pitch strike</span></div><div><b>'+c.whiff+'</b><span>Whiff</span></div></div><div class="stat"><div><b>'+s.pa+'</b><span>PA</span></div><div><b>'+s.avg+'</b><span>AVG against</span></div><div><b>'+s.k+'</b><span>K</span></div><div><b>'+s.bb+'</b><span>BB</span></div></div>'+
+ '<div class="note"><b>Tendencies</b> (overall: '+mix+')<br>First pitch: '+tp(f)+'<br>Two strikes: '+tp(l.filter(function(x){return x.s===2}))+'<br>Behind in the count: '+tp(l.filter(function(x){return x.b>x.s}))+'<br>Ahead in the count: '+tp(l.filter(function(x){return x.s>x.b}))+'</div>'+
+ '<h2>Pitch mix by count</h2><div class="wrap"><table><tr><th>Count</th><th>Pit</th><th>FB</th><th>CH</th><th>CB</th><th>SL</th><th>Zone</th></tr>'+rows+'</table></div>'+
+ '<h2>Locations</h2><div class="chips">'+['All'].concat(T4).map(function(v){return b(v,v,'ptf',ptf===v)}).join('')+'</div>'+plate('pv',d)+detail(lf)+'<p class="hint">Dot color shows pitch type: <span style="color:#ffd23f">FB</span> <span style="color:#5be28f">CH</span> <span style="color:#c084fc">CB</span> <span style="color:#38bdf8">SL</span>. Tap a dot for details.</p>'+
+ '<h2>Hitters against him</h2><div class="wrap"><table><tr><th>Hitter</th><th>PA</th><th>AVG</th><th>K</th><th>BB</th></tr>'+Object.keys(hs).map(function(i){var q=pas(hs[i]);return '<tr><td><button class="lnk" data-pid="'+i+'">'+esc(nm(i))+'</button></td><td>'+q.pa+'</td><td>'+q.avg+'</td><td>'+q.k+'</td><td>'+q.bb+'</td></tr>'}).join('')+'</table></div>'}
+function flat(id){var o=[];abs.slice().sort(function(x,y){return (x.at||0)-(y.at||0)}).forEach(function(a){if(!id||a.pid===id)a.pitches.forEach(function(p,i){o.push(Object.assign({},p,{pid:a.pid,pk:pkey(a),pitcher:a.pitcher||'',key:a.id+'_'+i,last:i===a.pitches.length-1,end:a.end}))})});return o}
+function calc(l){var d=l.filter(function(p){return p.out!=='hbp'}),sw=d.filter(swung),iz=d.filter(function(p){return p.inz}),oz=d.filter(function(p){return!p.inz});
+ var g=d.filter(good).length;return{n:l.length,dn:d.length,g:g,swing:pct(sw.length,d.length),chase:pct(oz.filter(swung).length,oz.length),zsw:pct(iz.filter(swung).length,iz.length),whiff:pct(sw.filter(function(p){return p.out==='sm'}).length,sw.length),dec:pct(g,d.length)}}
+function plate(id,inner){return '<svg id="'+id+'" viewBox="0 0 200 240" role="img" aria-label="Strike zone from the catcher view"><rect x="20" y="30" width="160" height="180" rx="10" fill="var(--grass)" opacity=".35"/><rect x="60" y="70" width="80" height="100" fill="none" stroke="var(--fg)" stroke-width="2"/><path d="M86.7 70V170M113.3 70V170M60 103.3H140M60 136.7H140" stroke="var(--fg)" stroke-opacity=".3"/><polygon points="80,218 120,218 120,226 100,236 80,226" fill="var(--fg)" opacity=".7"/>'+inner+'</svg>'}
+function b(v,l,k,on){return '<button class="'+(on?'on':'')+'" data-'+k+'="'+v+'">'+l+'</button>'}
+var OL={ball:'Ball',cs:'Called strike',sm:'Swing and miss',foul:'Foul',ip:'In play',hbp:'Hit by pitch'},SO={ball:'ball',cs:'called K',sm:'swing/miss',foul:'foul',hbp:'HBP'};
+function seq(a){return a.pitches.map(function(p){return p.b+'-'+p.s+' '+(p.t?p.t+' ':'')+(p.out==='ip'?p.res:SO[p.out])}).join(' · ')}
+var TN={FB:'Fastball',CH:'Changeup',CB:'Curveball',SL:'Slider'};
+function detail(l){var p=l.filter(function(x){return x.key===selPk})[0];if(!p)return '<p class="hint">Tap a dot to see what happened on that pitch.</p>';
+ var dc=p.out==='hbp'?'':(good(p)?'<b class="good">Good decision</b>':'<b class="bad">Bad decision</b>');
+ return '<div class="note"><b>'+(pid?'':esc(nm(p.pid))+': ')+'Count '+p.b+'-'+p.s+(p.t?' · '+TN[p.t]:'')+'</b><br>'+OL[p.out]+(p.out==='ip'?': '+p.res+(p.q?' ('+p.q.toLowerCase()+' contact)':''):'')+'<br>'+(p.inz?'In the zone':'Outside the zone')+(dc?' · '+dc:'')+(p.last?'<br>Ended the at-bat: '+p.end:'')+'<br><button data-clr="1" style="min-height:36px;margin-top:6px">Clear</button></div>'}
+function plist(l){
+ if(!l.length)return '<p class="hint">No pitches logged for this selection yet.</p>';
+ var r=l.slice().reverse().slice(0,40);
+ return '<h2>Pitch by pitch</h2><ul>'+r.map(function(p){var dc=p.out==='hbp'?'':(good(p)?'<b class="good">Good</b>':'<b class="bad">Bad</b>');
+  return '<li'+(p.key===selPk?' style="background:var(--card)"':'')+'><span><b>'+p.b+'-'+p.s+'</b> '+(p.t||'')+' '+OL[p.out]+(p.out==='ip'?': '+p.res+(p.q?' ('+p.q.toLowerCase()+')':''):'')+', '+(p.inz?'in zone':'out of zone')+(p.last?' - ends at-bat: '+p.end:'')+(pid?'':' - '+esc(nm(p.pid)))+'</span>'+dc+'</li>'}).join('')+'</ul>'+(l.length>40?'<p class="hint">Showing the latest 40 of '+l.length+'.</p>':'')}
+function report(l){
+ if(pf)l=l.filter(function(p){return p.pk===pf});var t=calc(l),rows='',worst=null,lt=l.filter(function(p){return ptf==='All'||p.t===ptf});
+ KEYS.forEach(function(k){var c=calc(lt.filter(function(p){return p.b+'-'+p.s===k}));
+  if(c.dn>=3&&(!worst||c.g/c.dn<worst.v))worst={k:k,v:c.g/c.dn,c:c};
+  var cl=c.dn?(c.g/c.dn<0.6?'bad':(c.g/c.dn>=0.8?'good':'')):'';
+  rows+='<tr'+(cnt===k?' style="background:var(--card)"':'')+'><td><button class="lnk" data-cnt="'+k+'">'+k+'</button></td><td>'+c.n+'</td><td>'+c.swing+'</td><td>'+c.chase+'</td><td>'+c.whiff+'</td><td class="'+cl+'">'+c.dec+'</td><td>'+endTxt(lt,k)+'</td></tr>'});
+ var f={All:function(){return 1},Ahead:function(p){return p.b>p.s},Even:function(p){return p.b===p.s},Behind:function(p){return p.s>p.b},'2K':function(p){return p.s===2}};
+ var zl=lt.filter(function(p){return cnt==='All'||p.b+'-'+p.s===cnt}),z=zl.filter(function(p){return p.out!=='hbp'});
+ var d=z.map(function(p){var c=good(p)?'var(--good)':'var(--bad)';var sl=p.key===selPk,hit='<circle cx="'+p.x+'" cy="'+p.y+'" r="10" fill="transparent" data-pk="'+p.key+'" style="cursor:pointer"/>',rg=sl?'<circle cx="'+p.x+'" cy="'+p.y+'" r="9" fill="none" stroke="var(--acc)" stroke-width="3"/>':'';return rg+(swung(p)?'<circle cx="'+p.x+'" cy="'+p.y+'" r="5" fill="'+c+'" stroke="var(--bg)"/>':'<circle cx="'+p.x+'" cy="'+p.y+'" r="5" fill="none" stroke="'+c+'" stroke-width="2.5"/>')+hit}).join('');
+ return '<div class="stat"><div><b>'+t.dec+'</b><span>Good decisions</span></div><div><b>'+t.chase+'</b><span>Chase</span></div><div><b>'+t.zsw+'</b><span>Zone swing</span></div><div><b>'+t.whiff+'</b><span>Whiff</span></div></div>'+
+ (worst?'<div class="note">Work on the '+worst.k+' count first: '+Math.round(worst.v*100)+'% good decisions over '+worst.c.dn+' pitches.</div>':'<p class="hint">Log at least 3 pitches in a count to see where to focus.</p>')+
+ '<div class="wrap"><table><tr><th>Count</th><th>Pit</th><th>Swing</th><th>Chase</th><th>Whiff</th><th>Good</th><th>Ended</th></tr>'+rows+'</table></div>'+
+ '<h2>Pitches: '+(cnt==='All'?'all counts':'count '+cnt)+(pf?' vs '+esc(pname(pf)):'')+'</h2><div class="chips">'+['All','FB','CH','CB','SL'].map(function(v){return b(v,v,'ptf',ptf===v)}).join('')+(cnt!=='All'?b('All','Show all counts','cnt',false):'')+(pf?b('-','All pitchers','pf',false):'')+'</div>'+plate('zv',d)+detail(zl)+
+ '<p class="hint">Filled dot = swing, ring = take. Green = good decision, red = bad. A good decision is a swing at a pitch in the zone or a take outside it. Chase = swings outside the zone. Tap a count in the table to see just those pitches.</p>'+plist(zl)}
+var SK=[['qab','QAB'],['pa','PA'],['b1','1B'],['b2','2B'],['b3','3B'],['hr','HR'],['bb','BB/HBP'],['k','K'],['rbi','RBI'],['sac','SAC'],['sf','SF'],['hh','HH'],['ab','AB']];
+function base(p){var s={};SK.forEach(function(k){s[k[0]]=Number(p&&p.st&&p.st[k[0]])||0});return s}
+function st(p){var s=base(p),t=p?trk(p.id):{};SK.forEach(function(k){s[k[0]]+=t[k[0]]||0});return s}
+function sum(l){var s={};SK.forEach(function(k){s[k[0]]=0});l.forEach(function(p){var x=st(p);SK.forEach(function(k){s[k[0]]+=x[k[0]]})});return s}
+function f3(n,d){return d?(n/d).toFixed(3):'0.000'}
+function dv(s){var h=s.b1+s.b2+s.b3+s.hr,tb=s.b1+2*s.b2+3*s.b3+4*s.hr,o=s.pa?(h+s.bb)/s.pa:0,g=s.ab?tb/s.ab:0;return{h:h,tb:tb,qp:f3(s.qab,s.pa),avg:f3(h,s.ab),obp:f3(h+s.bb,s.pa),slg:f3(tb,s.ab),ops:(o+g).toFixed(3),hp:f3(s.hh,s.ab)}}
+function srow(name,s,bold){var d=dv(s),v=[s.qab,s.pa,d.qp,d.h,s.b1,s.b2,s.b3,s.hr,d.tb,d.avg,d.obp,d.slg,d.ops,s.bb,s.k,s.rbi,s.sac,s.sf,s.hh,s.ab,d.hp];return '<tr'+(bold?' style="font-weight:700"':'')+'><td>'+name+'</td>'+v.map(function(x){return '<td>'+x+'</td>'}).join('')+'</tr>'}
+var SH='<tr><th>Name</th>'+['QAB','PA','QAB%','H','1B','2B','3B','HR','TB','AVG','OBP','SLG','OPS','BB/HBP','K','RBI','SAC','SF','HH','AB','HH%'].map(function(x){return '<th>'+x+'</th>'}).join('')+'</tr>';
+var sortI=-1,sortD=1;
+var SHN=['Name','QAB','PA','QAB%','H','1B','2B','3B','HR','TB','AVG','OBP','SLG','OPS','BB/HBP','K','RBI','SAC','SF','HH','AB','HH%'];
+function vals(s){var d=dv(s);return [s.qab,s.pa,d.qp,d.h,s.b1,s.b2,s.b3,s.hr,d.tb,d.avg,d.obp,d.slg,d.ops,s.bb,s.k,s.rbi,s.sac,s.sf,s.hh,s.ab,d.hp]}
+function sheet(){var hd='<tr>'+SHN.map(function(n,i){var on=sortI===i;return '<th'+(on?' aria-sort="'+(sortD>0?'ascending':'descending')+'"':'')+'><button class="srt'+(on?' on':'')+'" data-sort="'+i+'">'+n+(on?(sortD>0?' ▲':' ▼'):'')+'</button></th>'}).join('')+'</tr>';
+ var rows=players.map(function(p){return{p:p,s:st(p)}});
+ if(sortI===0)rows.sort(function(a,z){return sortD*a.p.name.localeCompare(z.p.name)});
+ else if(sortI>0)rows.sort(function(a,z){return sortD*(Number(vals(a.s)[sortI-1])-Number(vals(z.s)[sortI-1]))||a.p.name.localeCompare(z.p.name)});
+ return '<div class="wrap"><table class="sheet">'+hd+rows.map(function(r){return srow(esc(r.p.name),r.s)}).join('')+srow('Team',sum(players),1)+'</table></div><p class="hint">Tap a column heading to sort. Tap it again to flip the order.</p>'}
+function pstats(){var p=players.filter(function(x){return x.id===pid})[0],s=st(p),bs=base(p),d=dv(s);return '<h2>Season stats</h2><div class="stat"><div><b>'+d.avg+'</b><span>AVG</span></div><div><b>'+d.obp+'</b><span>OBP</span></div><div><b>'+d.slg+'</b><span>SLG</span></div><div><b>'+d.ops+'</b><span>OPS</span></div></div><div class="wrap"><table class="sheet">'+SH+srow(esc(p.name),s)+'</table></div>'+(canEdit?'<h2>Imported totals</h2><div class="frm">'+SK.map(function(k){return '<div><label for="f_'+k[0]+'">'+k[1]+'</label><input id="f_'+k[0]+'" type="number" min="0" inputmode="numeric" value="'+bs[k[0]]+'"></div>'}).join('')+'</div><button class="on" id="savest" style="width:100%;margin-top:10px">Save stats</button><p class="hint">These are totals from before you started logging here. Every at-bat you log is added on top, and H, TB, AVG, OBP, SLG, OPS, and the percentages are calculated for you.</p>':'')}
+function teamView(){
+ var rows=players.map(function(p){var l=flat(p.id),c=calc(l);return{p:p,c:c,pa:abs.filter(function(a){return a.pid===p.id}).length}}).sort(function(a,z){return z.c.dn-a.c.dn});
+ return '<h2>Team</h2>'+report(flat())+'<h2>Players</h2>'+(rows.length?'<div class="wrap"><table><tr><th>Player</th><th>PA</th><th>Good</th><th>Chase</th><th>Whiff</th></tr>'+rows.map(function(r){return '<tr><td><button class="lnk" data-pid="'+r.p.id+'">'+esc(r.p.name)+'</button></td><td>'+r.pa+'</td><td>'+r.c.dec+'</td><td>'+r.c.chase+'</td><td>'+r.c.whiff+'</td></tr>'}).join('')+'</table></div>':'<p class="hint">No players yet.'+(canEdit?' Add your first one below.':'')+'</p>')+
+ '<h2>Pitchers faced</h2>'+pitcherTable()+'<h2>Season stats</h2>'+(players.length?sheet():'')+(canEdit?'<div class="row" style="margin-top:10px"><input id="nm" placeholder="New player name" maxlength="30"><button id="add">Add player</button></div>':'')}
+function profView(){
+ var a=abs.filter(function(x){return x.pid===pid}).sort(function(x,y){return y.at-x.at}).slice(0,25);
+ return '<button data-back="1">Back to team</button><h2>'+esc(nm(pid))+'</h2>'+pstats()+vsP()+report(flat(pid))+'<h2>Recent at-bats</h2>'+(a.length?'<ul>'+a.map(function(x){return '<li><span>'+new Date(x.at).toLocaleDateString()+': '+esc(x.end)+(x.pitcher?' vs '+esc(x.pitcher):'')+' ('+x.pitches.length+' pitches)<br><small>'+seq(x)+'</small>'+tags(x)+'</span>'+(canEdit?'<button data-del="'+x.id+'" aria-label="Delete at-bat">Delete</button>':'')+'</li>'}).join('')+'</ul>':'<p class="hint">No at-bats logged yet.</p>')}
+function logView(){
+ if(!players.length)return '<p class="hint">Add players on the Team tab first.</p>';
+ if(!lp||!players.some(function(p){return p.id===lp}))lp=players[0].id;
+ if(fin)return finView();
+ var dot=P.x!==null?'<circle cx="'+P.x+'" cy="'+P.y+'" r="6" fill="var(--acc)" stroke="var(--fg)" stroke-width="1.5"/>':'';
+ var out=[['ball','Ball'],['cs','Called strike'],['sm','Swing and miss'],['foul','Foul'],['ip','In play'],['hbp','Hit by pitch']];
+ return '<select id="lp" aria-label="Hitter">'+players.map(function(p){return '<option value="'+p.id+'"'+(p.id===lp?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')+'</select><input id="pn" list="pl" placeholder="Pitcher (required)" value="'+esc(pit)+'" maxlength="30" style="width:100%;margin-top:8px"><datalist id="pl">'+pitchers().map(function(p){return '<option value="'+esc(p.name)+'">'}).join('')+'</datalist>'+
+ '<div class="count"><b>'+cur.b+'-'+cur.s+'</b><span>Pitch '+(cur.pitches.length+1)+' of this at-bat</span></div>'+
+ '<p class="hint">1. Tap where the pitch crossed the plate (catcher view).</p>'+plate('pz',dot)+
+ '<p class="hint">2. Pitch type (optional)</p><div class="g4">'+[['FB','Fastball'],['CH','Change'],['CB','Curve'],['SL','Slider']].map(function(x){return b(x[0],x[1],'pt',P.t===x[0])}).join('')+'</div>'+
+ '<p class="hint">3. What the hitter did</p><div class="g3">'+out.map(function(o){return b(o[0],o[1],'out',P.ip&&o[0]==='ip')}).join('')+'</div>'+
+ (P.ip?'<p class="hint">Contact and result</p><div class="chips">'+b('Hard','Hard hit','q',P.q==='Hard')+b('Soft','Soft','q',P.q==='Soft')+'</div><div class="g5">'+['1B','2B','3B','HR','Out'].map(function(v){return b(v,v,'res',false)}).join('')+'</div>':'')+
+ '<div class="row" style="margin-top:10px"><button id="undo" style="flex:1">Undo last pitch</button><button id="newpa" style="flex:1">Reset count</button></div><p class="hint">An at-bat saves to the roster when it ends.</p>'}
+function show(){TCM=null;derive();document.body.className=season===null?'home':'';
+ $('#sbar').innerHTML=season===null?'':'<div class="srow"><button data-home="1">All seasons</button><b>'+esc(sName(season))+'</b></div>';
+ var tabs=season===null?[]:[['team','Team']].concat(canEdit?[['log','Log']]:[]);
+ $('#tabs').innerHTML=tabs.map(function(t){return b(t[0],t[1],'tab',tab===t[0])}).join('');
+ var a=$('#app');
+ if(ready==='setup')a.innerHTML='<p class="hint">Firebase is not set up yet. Paste your Firebase config at the top of the script in index.html.</p>';
+ else if(ready==='login')a.innerHTML=loginView();
+ else if(ready==='verify')a.innerHTML=verifyView();
+ else if(ready==='noaccess')a.innerHTML=noAccessView();
+ else if(ready==='err')a.innerHTML='<p class="hint">Could not load the team data. Check your connection, or ask your coach to make sure your email is on the team list.</p><button id="signout" style="width:100%">Sign out</button>';
+ else if(!ready)a.innerHTML='<p class="hint">Connecting...</p>';
+ else if(season===null)a.innerHTML=homeView()+(canEdit?accessView():'')+'<button id="signout" style="width:100%;margin-top:16px">Sign out ('+esc(me)+')</button>';
+ else if(tab==='log'&&canEdit)a.innerHTML=logView();
+ else if(pvw)a.innerHTML=pitcherView();
+ else if(pid&&players.some(function(p){return p.id===pid}))a.innerHTML=profView();
+ else a.innerHTML=teamView()+toolsView()}
+async function logPitch(out,res){
+ if(fin)return;if(!pit.trim()){toast('Enter the pitcher first');return}if(P.x===null){toast('Tap where the pitch crossed the plate');return}
+ var inz=P.x>=60&&P.x<=140&&P.y>=70&&P.y<=170,end='';
+ var p={b:cur.b,s:cur.s,t:P.t,x:P.x,y:P.y,inz:inz,out:out,res:res||'',q:out==='ip'?P.q:''};
+ if(out==='ball'){cur.b++;if(cur.b>=4)end='BB'}
+ else if(out==='cs'||out==='sm'){cur.s++;if(cur.s>=3)end='K'}
+ else if(out==='foul'){if(cur.s<2)cur.s++}
+ else if(out==='ip')end=res;else end='HBP';
+ cur.pitches.push(p);P={x:null,y:null,t:'',q:'',ip:false};
+ if(end){fin={end:end,rbi:0,sac:0,sf:0};fin.qab=autoQ()}
 
-    function signedIn() {
-      return request.auth != null
-        && request.auth.token.email != null
-        && request.auth.token.email_verified == true;
-    }
+ show()}
+document.addEventListener('click',async function(e){
+ var el=e.target.closest('button');if(!el)return;var d=el.dataset;
+ if(el.id==='signin'||el.id==='signup'){var em=$('#em').value.trim(),pw=$('#pw').value;if(!em||!pw){toast('Enter your email and password');return}
+  try{if(el.id==='signin')await firebase.auth().signInWithEmailAndPassword(em,pw);else{var cr=await firebase.auth().createUserWithEmailAndPassword(em,pw);await cr.user.sendEmailVerification()}}
+  catch(x){var c=x&&x.code||'';toast(c.indexOf('email-already')>=0?'That email already has an account. Tap Sign in.':c.indexOf('weak-password')>=0?'Password needs 6+ characters':c.indexOf('invalid-email')>=0?'That email does not look right':'Wrong email or password')}return}
+ if(el.id==='reset'){var em2=$('#em').value.trim();if(!em2){toast('Type your email first');return}try{await firebase.auth().sendPasswordResetEmail(em2);toast('Reset email sent')}catch(x){toast('Could not send reset email')}return}
+ if(el.id==='signout'){await firebase.auth().signOut();return}
+ if(el.id==='resend'){try{await firebase.auth().currentUser.sendEmailVerification();toast('Email sent')}catch(x){toast('Wait a minute, then try again')}return}
+ if(el.id==='verified'){var cu=firebase.auth().currentUser;await cu.reload();if(cu.emailVerified){await cu.getIdToken(true);location.reload()}else toast('Not verified yet. Tap the link in the email.');return}
+ if(el.id==='retry'){location.reload();return}
+ if(el.id==='addp'||el.id==='addc'){var ne=$('#mem').value.trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ne)){toast('Enter a valid email');return}try{await db.collection('members').doc(ne).set({role:el.id==='addc'?'coach':'player'});toast('Added '+ne)}catch(x){toast('Could not add')}return}
+ if(d.rmmem){try{await db.collection('members').doc(d.rmmem).delete();toast('Removed')}catch(x){toast('Could not remove')}return}
+ if(d.sort!==undefined){var si=+d.sort;if(sortI===si)sortD=-sortD;else{sortI=si;sortD=si===0?1:-1}show()}
+ else if(d.restore){try{await db.collection('seasons').doc(d.restore).update({archived:false});toast('Season restored')}catch(x){toast('Could not restore')}}
+ else if(el.id==='exs'){exportStats()}
+ else if(el.id==='exp'){exportPitches()}
+ else if(el.id==='rename'){var rn=$('#rn').value.trim();if(!rn){toast('Enter a season name');return}var rf=db.collection('seasons').doc(season);try{try{await rf.update({name:rn})}catch(e1){await rf.set({name:rn,at:0})}toast('Season renamed')}catch(x){toast('Could not rename')}}
+ else if(el.id==='archive'){var rf2=db.collection('seasons').doc(season);try{try{await rf2.update({archived:true})}catch(e1){await rf2.set({name:sName(season),at:0,archived:true})}season=null;pid=null;pvw='';toast('Season archived');show()}catch(x){toast('Could not archive')}}
+ else if(d.season){season=d.season;tab='team';pid=null;pvw='';pf='';cnt='All';ptf='All';selPk='';cur={b:0,s:0,pitches:[]};fin=null;lp='';show();window.scrollTo(0,0)}
+ else if(d.home){if(cur.pitches.length)toast('Unfinished at-bat cleared');season=null;pid=null;pvw='';pf='';cur={b:0,s:0,pitches:[]};fin=null;show();window.scrollTo(0,0)}
+ else if(el.id==='mkseason'){var sn=$('#sn').value.trim();if(!sn){toast('Enter a season name first');return}var src=$('#sc').value;
+  try{var r=await db.collection('seasons').add({name:sn,at:Date.now()});
+   if(src){var ps=allP.filter(function(p){return (p.season||LEG)===src});for(var i=0;i<ps.length;i++){await db.collection('players').add({name:ps[i].name,season:r.id})}}
+   toast('Season created')}catch(x){toast('Could not create season')}}
+ else if(d.tab){tab=d.tab;pid=null;pvw='';pf='';show()}
+ else if(d.pid){pid=d.pid;pvw='';pf='';cnt='All';ptf='All';selPk='';show();window.scrollTo(0,0)}
+ else if(d.back){pid=null;pvw='';pf='';show()}
+ else if(d.clr){selPk='';show()}
+ else if(d.pv){pvw=d.pv;pid=null;pf='';ptf='All';cnt='All';selPk='';show();window.scrollTo(0,0)}
+ else if(d.pf!==undefined){pf=d.pf==='-'?'':d.pf;cnt='All';selPk='';show()}
+ else if(d.cnt){cnt=d.cnt;show()}
+ else if(d.ptf){ptf=d.ptf;show()}
+ else if(d.frbi){fin.rbi=+d.frbi;show()}
 
-    function myDoc() {
-      return /databases/$(database)/documents/members/$(request.auth.token.email.lower());
-    }
-
-    function isMember() {
-      return signedIn() && exists(myDoc());
-    }
-
-    function isCoach() {
-      return isMember() && get(myDoc()).data.role == 'coach';
-    }
-
-    match /members/{email} {
-      allow read: if isCoach() || (signedIn() && request.auth.token.email.lower() == email);
-      allow write: if isCoach();
-    }
-
-    match /seasons/{id} {
-      allow read: if isMember();
-      allow write: if isCoach();
-    }
-
-    match /players/{id} {
-      allow read: if isMember();
-      allow write: if isCoach();
-    }
-
-    match /abs/{id} {
-      allow read: if isMember();
-      allow write: if isCoach();
-    }
-  }
-}
+ else if(d.ftog){var k=d.ftog;fin[k]=fin[k]?0:1;if((k==='sac'||k==='sf')&&fin[k])fin.qab=1;show()}
+ else if(el.id==='finback'){var q=cur.pitches.pop();cur.b=q.b;cur.s=q.s;fin=null;show()}
+ else if(el.id==='finsave'){try{await db.collection('abs').add({season:season,pid:lp,at:Date.now(),end:fin.end,pitcher:pit.trim(),rbi:fin.rbi,sac:fin.sac,sf:fin.sf,qab:fin.qab?1:0,pitches:cur.pitches});toast('At-bat saved: '+fin.end);cur={b:0,s:0,pitches:[]};fin=null}catch(x){toast('Could not save. Try again.')}show()}
+ else if(d.pt){P.t=P.t===d.pt?'':d.pt;show()}
+ else if(d.out){if(d.out==='ip'){P.ip=!P.ip;show()}else logPitch(d.out)}
+ else if(d.q){P.q=P.q===d.q?'':d.q;show()}
+ else if(d.res){logPitch('ip',d.res)}
+ else if(d.del){try{await db.collection('abs').doc(d.del).delete()}catch(x){toast('Could not delete')}}
+ else if(el.id==='undo'){var p=cur.pitches.pop();if(!p){toast('Nothing to undo');return}cur.b=p.b;cur.s=p.s;show()}
+ else if(el.id==='newpa'){cur={b:0,s:0,pitches:[]};show()}
+ else if(el.id==='savest'){var o={};SK.forEach(function(k){o[k[0]]=Math.max(0,parseInt($('#f_'+k[0]).value,10)||0)});try{await db.collection('players').doc(pid).update({st:o});toast('Stats saved')}catch(x){toast('Could not save stats')}}
+ else if(el.id==='add'){var n=$('#nm').value.trim();if(!n){toast('Enter a name first');return}
+  try{await db.collection('players').add({name:n,season:season});toast('Player added')}catch(x){toast('Could not add player')}}
+});
+document.addEventListener('change',function(e){if(e.target.id==='lp'){if(cur.pitches.length){toast('Finish or reset this at-bat first');show();return}lp=e.target.value}});
+document.addEventListener('input',function(e){if(e.target.id==='pn')pit=e.target.value});
+document.addEventListener('click',function(e){var c=e.target.closest('[data-pk]');if(c){var k=c.getAttribute('data-pk');selPk=selPk===k?'':k;show()}});
+document.addEventListener('pointerdown',function(e){
+ var s=e.target.closest('#pz');if(!s)return;
+ var p=s.createSVGPoint();p.x=e.clientX;p.y=e.clientY;var q=p.matrixTransform(s.getScreenCTM().inverse());
+ P.x=Math.round(Math.max(2,Math.min(198,q.x)));P.y=Math.round(Math.max(2,Math.min(238,q.y)));show()});
+(function(){
+ if(!window.firebase||FIREBASE_CONFIG.apiKey.indexOf('PASTE')===0){ready='setup';show();return}
+ firebase.initializeApp(FIREBASE_CONFIG);db=firebase.firestore();var subs=[];
+ function rows(s){return s.docs.map(function(d){var o=d.data();o.id=d.id;return o})}
+ firebase.auth().onAuthStateChanged(async function(u){
+  subs.forEach(function(f){f()});subs=[];allP=[];allA=[];seasons=[];mem=[];canEdit=false;season=null;pid=null;pvw='';
+  if(!u){me=null;ready='login';show();return}
+  me=(u.email||'').toLowerCase();
+  if(!u.emailVerified){ready='verify';show();return}
+  ready=false;show();
+  try{var m=await db.collection('members').doc(me).get();if(!m.exists){ready='noaccess';show();return}canEdit=m.data().role==='coach'}catch(e){ready='noaccess';show();return}
+  subs.push(db.collection('players').onSnapshot(function(s){allP=rows(s);ready=true;show()},function(){ready='err';show()}));
+  subs.push(db.collection('abs').onSnapshot(function(s){allA=rows(s).filter(function(a){return Array.isArray(a.pitches)});show()},function(){}));
+  subs.push(db.collection('seasons').onSnapshot(function(s){seasons=rows(s);show()},function(){}));
+  if(canEdit)subs.push(db.collection('members').onSnapshot(function(s){mem=rows(s);show()},function(){}));
+ });
+})();
+show();
+</script>
+</body>
+</html>
