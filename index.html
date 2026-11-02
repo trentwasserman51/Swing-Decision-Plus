@@ -90,7 +90,7 @@ var FIREBASE_CONFIG={
 // =============================================================================================
 // ===== PASTE YOUR STRIPE PAYMENT LINK HERE (Stripe dashboard > Payment Links) =====
 var STRIPE_LINK="https://buy.stripe.com/test_4gM9AU0cT3oe6YLdzm3cc00";
-var OWNER='trentwasserman51@gmail.com';var PRICE='$100/year',TRIAL_DAYS=14;
+var OWNER='trentwasserman51@gmail.com';var JUSTPAID=/[?&]paid=1/.test(location.search);if(JUSTPAID){try{history.replaceState(null,'',location.pathname)}catch(e){}}var PRICE='$100/year',TRIAL_DAYS=14;
 // ==================================================================================
 var mem=[],me=null,myM=[],team=null,teamDoc=null,role=null,isAdm=false,allTeams=[],adminView=false,tsubs=[];
 function C(n){return db.collection('teams').doc(team).collection(n)}
@@ -100,7 +100,7 @@ function paidEnd(t){return ms(t&&t.paidUntil)}
 function isActive(t){var n=Date.now();return !!t&&(n<trialEnd(t)||n<paidEnd(t))}
 function fd(x){return new Date(x).toLocaleDateString()}
 function payUrl(){return STRIPE_LINK+(STRIPE_LINK.indexOf('?')<0?'?':'&')+'client_reference_id='+encodeURIComponent(team)+'&prefilled_email='+encodeURIComponent(me)}
-function statusHtml(){if(!teamDoc)return '';var n=Date.now(),pe=paidEnd(teamDoc),te=trialEnd(teamDoc),txt,warn=false,showPay=false;
+function statusHtml(){if(!teamDoc)return '';if(JUSTPAID&&!(Date.now()<paidEnd(teamDoc)))return '<div class="note" style="border-left-color:var(--good)"><b>Thanks! Your payment went through.</b><br><small>'+esc(teamDoc.name)+' will be activated within 24 hours. You can keep using the app in the meantime.</small></div>';var n=Date.now(),pe=paidEnd(teamDoc),te=trialEnd(teamDoc),txt,warn=false,showPay=false;
  if(n<pe){txt='Active through '+fd(pe);showPay=pe-n<30*864e5}
  else if(n<te){var dl=Math.ceil((te-n)/864e5);txt='Free trial: '+dl+' day'+(dl===1?'':'s')+' left';showPay=true}
  else{txt='Subscription ended. Stats are view-only until the team renews.';warn=true;showPay=true}
