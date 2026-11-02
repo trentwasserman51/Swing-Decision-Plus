@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terms of Service | SWING DECISION PLUS</title>
+<meta name="theme-color" content="#0a1f44">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Barlow:wght@400;600&display=swap">
+<style>
+:root{--bg:#0a1f44;--card:#12306b;--fg:#d6e4ff;--mut:#8fb0e8;--line:#24489a;--acc:#ffd23f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 Barlow,system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 18px 60px}
+h1{font:700 34px/1.1 "Barlow Condensed","Arial Narrow",sans-serif;margin:0 0 4px;border-bottom:4px solid var(--acc);padding-bottom:8px}
+h2{font:700 22px/1.2 "Barlow Condensed","Arial Narrow",sans-serif;margin:28px 0 6px;color:var(--acc)}
+p,li{margin:6px 0}
+a{color:var(--acc)}
+.mut{color:var(--mut);font-size:14px}
+.back{display:inline-block;margin-bottom:16px;color:var(--acc);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">&larr; Back to Swing Decision Plus</a>
+<h1>Terms of Service</h1>
+<p class="mut">Last updated: November 2, 2026</p>
+
+<p>These Terms of Service ("Terms") govern your use of Swing Decision Plus (the "Service"), operated by <b>[LLC NAME]</b> ("we," "us," or "our"), a New York limited liability company. By creating an account or using the Service, you agree to these Terms. If you do not agree, do not use the Service.</p>
+
+<h2>1. The Service</h2>
+<p>Swing Decision Plus is web-based software that lets baseball and softball teams log pitches and at-bats and view hitting and pitching statistics. We may add, change, or remove features at any time.</p>
+
+<h2>2. Accounts</h2>
+<ul>
+<li>You must give accurate information, including a valid email address, and keep your password secure. You are responsible for activity on your account.</li>
+<li>A coach who starts a team is the team's "Owner." The Owner and other coaches control who can join the team, which roles members have, and the team's data.</li>
+<li>Players and assistant coaches join a team using a team code or an email invitation from a coach.</li>
+</ul>
+
+<h2>3. Free trial, subscriptions, and payment</h2>
+<ul>
+<li>New teams receive a free trial of 14 days. No payment information is required to start a trial.</li>
+<li>After the trial, continued use of coach features requires a paid subscription of <b>$100 (USD) per team per year</b>, unless a different price is shown at checkout.</li>
+<li>Payments are processed by Stripe. We do not store your full card number.</li>
+<li><b>Subscriptions renew automatically</b> each year at the then-current price, charged to the payment method on file, until canceled. We will give notice before any price change takes effect.</li>
+<li>You can cancel at any time by emailing <b>[SUPPORT EMAIL]</b> or using the link in your Stripe receipt. Cancellation stops future renewals; your team keeps access through the end of the paid year.</li>
+<li>If a subscription ends or is not paid, the team's data stays viewable but coaches can no longer log or edit until the team renews.</li>
+</ul>
+
+<h2>4. Refunds</h2>
+<p>If you are not satisfied, you may request a full refund within <b>14 days</b> of your first annual payment by emailing <b>[SUPPORT EMAIL]</b>. Renewal payments may be refunded if you request it within 14 days of the renewal charge and the team has not logged new at-bats since that charge. Otherwise, payments are non-refundable, except where required by law.</p>
+
+<h2>5. Your data</h2>
+<ul>
+<li>Your team's rosters, at-bats, pitches, and statistics ("Team Data") belong to your team. You give us permission to store, process, and display Team Data only to provide and improve the Service.</li>
+<li>Coaches can export Team Data as CSV files and can delete seasons at any time. Deleted data cannot be recovered.</li>
+<li>We do not sell Team Data. How we handle personal information is described in our <a href="privacy.html">Privacy Policy</a>.</li>
+</ul>
+
+<h2>6. Acceptable use</h2>
+<p>You agree not to:</p>
+<ul>
+<li>access another team's data without permission, or share team codes publicly to give access to people who should not have it;</li>
+<li>copy, resell, or reverse engineer the Service, or use it to build a competing product;</li>
+<li>interfere with or overload the Service, or try to get around its security or payment requirements;</li>
+<li>upload anything unlawful, harassing, or that you do not have the right to share.</li>
+</ul>
+
+<h2>7. Our intellectual property</h2>
+<p>The Service, including its software, design, logos, and the name "Swing Decision Plus," is owned by us and protected by law. These Terms give you a limited right to use the Service; they do not transfer any ownership to you.</p>
+
+<h2>8. Suspension and termination</h2>
+<p>We may suspend or close accounts that break these Terms or put the Service or other users at risk. You may stop using the Service at any time. Sections 5, 7, 9, 10, and 11 continue to apply after your account ends.</p>
+
+<h2>9. Disclaimers</h2>
+<p>The Service is provided "as is" and "as available." Statistics and reports are tools to support coaching decisions; we do not guarantee any particular athletic result. We do not promise that the Service will be uninterrupted or error-free, and we are not responsible for data entered incorrectly by users.</p>
+
+<h2>10. Limitation of liability</h2>
+<p>To the fullest extent allowed by law, we are not liable for any indirect, incidental, special, or consequential damages, or for lost data or profits. Our total liability for any claim relating to the Service is limited to the amount you paid us in the 12 months before the claim.</p>
+
+<h2>11. Governing law</h2>
+<p>These Terms are governed by the laws of the State of New York, without regard to its conflict-of-law rules. Any dispute will be handled in the state or federal courts located in Erie County, New York.</p>
+
+<h2>12. Changes to these Terms</h2>
+<p>We may update these Terms. If we make a material change, we will post the new Terms here and update the date above, and we will notify team Owners by email or in the app. Continuing to use the Service after a change means you accept the updated Terms.</p>
+
+<h2>13. Contact</h2>
+<p>Questions about these Terms: <b>[SUPPORT EMAIL]</b><br>[LLC NAME], [MAILING ADDRESS]</p>
+</main>
+</body>
+</html>
