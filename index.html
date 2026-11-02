@@ -62,6 +62,7 @@ li span{flex:1}ul{padding:0;margin:0}small{color:var(--mut)}
 .srow b{font:700 26px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.5px;color:var(--acc)}
 .home .brand svg{max-width:420px;display:block;margin:0 auto}
 .srt{background:none;border:0;min-height:36px;padding:4px 2px;color:var(--mut);font:600 13px Barlow,system-ui,sans-serif;white-space:nowrap;cursor:pointer;border-radius:6px}.srt.on{color:var(--acc)}
+.hero{background:var(--card);border-radius:12px;padding:14px 16px;margin:4px 0 10px}.hero p{margin:6px 0 0;color:var(--fg)}.steps{padding-left:20px;margin:6px 0}.steps li{display:list-item;list-style:decimal;border:0;padding:4px 0}.code{font:700 40px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:6px;color:var(--acc)}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;display:none}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -87,7 +88,31 @@ var FIREBASE_CONFIG={
  appId:"1:819771148382:web:e346f5431ddac0ff6a8ccf"
 };
 // =============================================================================================
-var mem=[],me=null;
+// ===== PASTE YOUR STRIPE PAYMENT LINK HERE (Stripe dashboard > Payment Links) =====
+var STRIPE_LINK="PASTE_STRIPE_PAYMENT_LINK";
+var PRICE='$100/year',TRIAL_DAYS=14;
+// ==================================================================================
+var mem=[],me=null,myM=[],team=null,teamDoc=null,role=null,isAdm=false,allTeams=[],adminView=false,tsubs=[];
+function C(n){return db.collection('teams').doc(team).collection(n)}
+function ms(t){return t&&t.toMillis?t.toMillis():(t||0)}
+function trialEnd(t){return ms(t&&t.createdAt)+TRIAL_DAYS*864e5}
+function paidEnd(t){return ms(t&&t.paidUntil)}
+function isActive(t){var n=Date.now();return !!t&&(n<trialEnd(t)||n<paidEnd(t))}
+function fd(x){return new Date(x).toLocaleDateString()}
+function payUrl(){return STRIPE_LINK+(STRIPE_LINK.indexOf('?')<0?'?':'&')+'client_reference_id='+encodeURIComponent(team)+'&prefilled_email='+encodeURIComponent(me)}
+function statusHtml(){if(!teamDoc)return '';var n=Date.now(),pe=paidEnd(teamDoc),te=trialEnd(teamDoc),txt,warn=false,showPay=false;
+ if(n<pe){txt='Active through '+fd(pe);showPay=pe-n<30*864e5}
+ else if(n<te){var dl=Math.ceil((te-n)/864e5);txt='Free trial: '+dl+' day'+(dl===1?'':'s')+' left';showPay=true}
+ else{txt='Subscription ended. Stats are view-only until the team renews.';warn=true;showPay=true}
+ return '<div class="note"'+(warn?' style="border-left-color:var(--bad)"':'')+'><b>'+esc(teamDoc.name)+'</b><br><small>'+txt+'</small>'+(showPay&&role==='coach'&&STRIPE_LINK.indexOf('PASTE')<0?'<br><a href="'+esc(payUrl())+'" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:8px;padding:10px;border-radius:8px;background:var(--acc);color:var(--accfg);font-weight:600;text-decoration:none">Subscribe ('+PRICE+')</a><small>After paying, your team is activated within 24 hours.</small>':'')+'</div>'}
+function teamsView(){var h='<h2>Your teams</h2>';
+ h+=myM.length?'<div class="seasons">'+myM.slice().sort(function(a,b){return (a.teamName||'').localeCompare(b.teamName||'')}).map(function(m){return '<button class="season" data-team="'+esc(m.teamId)+'"><b>'+esc(m.teamName||'Team')+'</b><span>'+(m.role==='coach'?'Coach':'Player')+'</span></button>'}).join('')+'</div>':'<p class="hint">You are not on a team yet. Join with a team code, or start your own team below.</p>';
+ h+='<h2>Join a team</h2><p class="hint">Players and assistant coaches: enter the team code your coach gave you.</p><div class="row"><input id="jc" placeholder="Team code" maxlength="8" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px"><button class="on" id="joinbtn">Join</button></div>';
+ h+='<h2>Start a team</h2><p class="hint">For coaches. Free for '+TRIAL_DAYS+' days, then '+PRICE+' per team. Every coach and player on your roster is included.</p><input id="tn" placeholder="Team name, e.g. Genesee CC Baseball" maxlength="40" style="width:100%"><button class="on" id="mkteam" style="width:100%;margin-top:8px">Start free trial</button>';
+ if(isAdm)h+='<button id="openadmin" style="width:100%;margin-top:16px">Admin: all teams</button>';
+ return h+'<button id="signout" style="width:100%;margin-top:16px">Sign out ('+esc(me)+')</button>'}
+function adminHtml(){var n=Date.now();return '<button id="closeadmin">Back</button><h2>All teams ('+allTeams.length+')</h2><p class="hint">When a Stripe payment comes in, find the team by the ID in the payment\'s "Client reference ID" and tap Activate.</p><ul>'+allTeams.slice().sort(function(a,b){return ms(b.createdAt)-ms(a.createdAt)}).map(function(t){var pe=paidEnd(t),te=trialEnd(t),st=n<pe?'<b class="good">Paid through '+fd(pe)+'</b>':(n<te?'Trial until '+fd(te):'<b class="bad">Expired</b>');return '<li><span><b>'+esc(t.name)+'</b><br><small>'+esc(t.owner)+' · ID '+esc(t.id)+'</small><br><small>'+st+'</small></span><button data-act="'+esc(t.id)+'">Activate 1 yr</button></li>'}).join('')+'</ul>'}
+
 var db=null,user=null,canEdit=false,ready=false,players=[],abs=[],tab='team',pid=null,flt='All',cnt='All',ptf='All',lp='';
 var allP=[],allA=[],seasons=[],season=null,LEG='fall-2026';
 var cur={b:0,s:0,pitches:[]},P={x:null,y:null,t:'',q:'',ip:false};
@@ -106,7 +131,7 @@ function sMeta(id){var ps=allP.filter(function(p){return (p.season||LEG)===id}),
 function homeView(){var l=sList(),act=l.filter(function(x){return !x.archived}),arch=l.filter(function(x){return x.archived}),h='<p class="hint">Choose a season</p><div class="seasons">'+(act.length?act.map(function(x){return '<button class="season" data-season="'+esc(x.id)+'"><b>'+esc(x.name)+'</b><span>'+sMeta(x.id)+'</span></button>'}).join(''):'<p class="hint">No seasons yet.'+(canEdit?' Create your first one below.':'')+'</p>')+'</div>';
  if(arch.length)h+='<h2>Archived</h2>'+arch.map(function(x){return '<div class="row" style="margin-bottom:6px"><button data-season="'+esc(x.id)+'" style="flex:1;text-align:left">'+esc(x.name)+'</button>'+(canEdit?'<button data-restore="'+esc(x.id)+'">Restore</button>':'')+'</div>'}).join('');
  if(canEdit)h+='<h2>New season</h2><input id="sn" placeholder="Spring 2027" maxlength="30" aria-label="Season name" style="width:100%"><select id="sc" aria-label="Roster" style="width:100%;margin-top:8px"><option value="">Start with an empty roster</option>'+l.map(function(x){return '<option value="'+esc(x.id)+'">Copy players from '+esc(x.name)+'</option>'}).join('')+'</select><button class="on" id="mkseason" style="width:100%;margin-top:8px">Create season</button><p class="hint">Copying brings over player names only. Stats start at zero.</p>';
- if(canEdit&&me==='trentwasserman51@gmail.com')h+='<h2>Demo data</h2><button id="demo" style="width:100%">Load demo data</button><p class="hint">Adds a separate "Demo Season" with a fake roster of 12 hitters, 6 pitchers, and about 190 logged at-bats so you can see every screen filled in. Archive it from the season settings when you are done.</p>';
+ if(canEdit&&isAdm)h+='<h2>Demo data</h2><button id="demo" style="width:100%">Load demo data</button><p class="hint">Adds a separate "Demo Season" with a fake roster of 12 hitters, 6 pitchers, and about 190 logged at-bats so you can see every screen filled in. Archive it from the season settings when you are done.</p>';
  return h}
 function demoGen(){var R=Math.random,pick=function(a){return a[Math.floor(R()*a.length)]},
  F=['Jake','Tyler','Ryan','Matt','Cole','Luke','Evan','Nick','Drew','Sam','Ben','Max','Alex','Zach','Owen'],
@@ -136,12 +161,21 @@ async function deleteSeason(COL,sid){var refs=[COL('seasons').doc(sid)];
  allP.forEach(function(p){if((p.season||LEG)===sid)refs.push(COL('players').doc(p.id))});
  allA.forEach(function(a){if((a.season||LEG)===sid)refs.push(COL('abs').doc(a.id))});
  for(var i=0;i<refs.length;i+=400){var bt=db.batch();refs.slice(i,i+400).forEach(function(r){bt.delete(r)});await bt.commit()}}
-var dl=null;
-function loginView(){return '<h2>Sign in</h2><input id="em" type="email" autocomplete="email" placeholder="Email" style="width:100%"><input id="pw" type="password" autocomplete="current-password" placeholder="Password (6+ characters)" style="width:100%;margin-top:8px"><button class="on" id="signin" style="width:100%;margin-top:8px">Sign in</button><button id="signup" style="width:100%;margin-top:8px">Create account</button><button id="reset" style="width:100%;margin-top:8px">Forgot password</button><p class="hint">Use the email address your coach added to the team.</p>'}
+async function makeCode(tid,tname,old){var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',c,i,n;
+ for(n=0;n<8;n++){c='';for(i=0;i<6;i++)c+=A[Math.floor(Math.random()*A.length)];var ex=await db.collection('codes').doc(c).get();if(!ex.exists)break}
+ await db.collection('codes').doc(c).set({teamId:tid,teamName:tname});await db.collection('teams').doc(tid).update({code:c});
+ if(old){try{await db.collection('codes').doc(old).delete()}catch(e){}}return c}
+var dl=null;function canE(){return role==='coach'&&isActive(teamDoc)}
+function loginView(){return '<div class="hero"><h2 style="margin-top:4px">Teach every hitter to swing at the right pitches.</h2><p>Log every pitch of every at-bat. See each hitter\'s swing decisions by count, chase and whiff rates, QAB stats, and how they do against every pitcher you face.</p></div>'+
+ '<div class="stat"><div><b>12</b><span>Counts tracked</span></div><div><b>21</b><span>QAB chart stats</span></div><div><b>All</b><span>Pitchers faced</span></div><div><b>Free</b><span>'+TRIAL_DAYS+'-day trial</span></div></div>'+
+ '<h2>How it works</h2><ol class="steps"><li><b>Coaches</b> create an account and start a team. Free for '+TRIAL_DAYS+' days, then '+PRICE+' per team.</li><li><b>Share your team code</b> with your players and staff.</li><li><b>Players</b> create an account, enter the code, and see their own stats and the team\'s.</li></ol>'+
+ '<h2 id="auth">Get started</h2><input id="em" type="email" autocomplete="email" placeholder="Email" style="width:100%"><input id="pw" type="password" autocomplete="current-password" placeholder="Password (6+ characters)" style="width:100%;margin-top:8px"><button class="on" id="signup" style="width:100%;margin-top:8px">Create account</button><button id="signin" style="width:100%;margin-top:8px">Sign in</button><button id="reset" style="width:100%;margin-top:8px">Forgot password</button><p class="hint">Coaches and players both start here. After you sign in, start a team or enter your team code.</p>'}
 function verifyView(){return '<h2>Check your email</h2><p class="hint">We sent a link to '+esc(me)+'. Tap it, then come back and tap the button below. Check your spam folder if you do not see it.</p><button class="on" id="verified" style="width:100%">I verified my email</button><button id="resend" style="width:100%;margin-top:8px">Send the email again</button><button id="signout" style="width:100%;margin-top:8px">Sign out</button>'}
 function noAccessView(){return '<h2>Not on the team list yet</h2><p class="hint">You are signed in as '+esc(me)+', but this email has not been added to the team. Ask your coach to add it, then tap Try again.</p><button class="on" id="retry" style="width:100%">Try again</button><button id="signout" style="width:100%;margin-top:8px">Sign out</button>'}
-function accessView(){var l=mem.slice().sort(function(x,y){return (x.role===y.role?0:(x.role==='coach'?-1:1))||x.id.localeCompare(y.id)});
- return '<h2>Team access</h2><p class="hint">Only these emails can open the app. Coaches can log and edit. Players can view everything.</p><ul>'+l.map(function(m){return '<li><span>'+esc(m.id)+'<br><small>'+(m.role==='coach'?'Coach':'Player')+'</small></span>'+(m.id===me?'<small>You</small>':'<button data-rmmem="'+esc(m.id)+'">Remove</button>')+'</li>'}).join('')+'</ul><input id="mem" type="email" placeholder="Email address" style="width:100%;margin-top:8px"><div class="row" style="margin-top:8px"><button id="addp" style="flex:1">Add player</button><button id="addc" style="flex:1">Add coach</button></div><p class="hint">After you add someone, they open the app and tap Create account with that same email.</p>'}
+function accessView(){var l=mem.map(function(m){return {id:m.email,role:m.role}}).sort(function(x,y){return (x.role===y.role?0:(x.role==='coach'?-1:1))||x.id.localeCompare(y.id)}),own=teamDoc&&teamDoc.owner;
+ return '<h2>Team code</h2>'+(teamDoc&&teamDoc.code?'<div class="note" style="text-align:center"><div class="code">'+esc(teamDoc.code)+'</div><small>Players and coaches enter this after creating an account. Everyone who joins starts as a player. Tap Make coach to give them coach access.</small></div><button id="newcode" style="width:100%">Make a new code</button><p class="hint">A new code stops the old one from working. People already on the team stay on it.</p>':'<button class="on" id="newcode" style="width:100%">Create team code</button>')+
+ '<h2>Team members ('+l.length+')</h2><ul>'+l.map(function(m){var fixed=m.id===me||m.id===own;return '<li><span>'+esc(m.id)+'<br><small>'+(m.role==='coach'?'Coach':'Player')+(m.id===own?' · Owner':'')+(m.id===me?' · You':'')+'</small></span>'+(fixed?'':'<button data-role="'+esc(m.id)+'" data-to="'+(m.role==='coach'?'player':'coach')+'">'+(m.role==='coach'?'Make player':'Make coach')+'</button><button data-rmmem="'+esc(m.id)+'" aria-label="Remove">Remove</button>')+'</li>'}).join('')+'</ul>'+
+ '<p class="hint">Or add someone by email. They create an account with that email and see the team right away.</p><input id="mem" type="email" placeholder="Email address" style="width:100%"><div class="row" style="margin-top:8px"><button id="addp" style="flex:1">Add player</button><button id="addc" style="flex:1">Add coach</button></div>'}
 function csv(rows){return rows.map(function(r){return r.map(function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')}).join('\r\n')}
 function fname(x){return (sName(season)+' '+x).replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()+'.csv'}
 function sendCsv(rows,label){try{var bl=new Blob(['\ufeff'+csv(rows)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=fname(label);document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);toast('Export ready')}catch(e){toast('Could not export')}}
@@ -248,9 +282,9 @@ function logView(){
  '<p class="hint">3. What the hitter did</p><div class="g3">'+out.map(function(o){return b(o[0],o[1],'out',P.ip&&o[0]==='ip')}).join('')+'</div>'+
  (P.ip?'<p class="hint">Contact and result</p><div class="chips">'+b('Hard','Hard hit','q',P.q==='Hard')+b('Soft','Soft','q',P.q==='Soft')+'</div><div class="g5">'+['1B','2B','3B','HR','Out'].map(function(v){return b(v,v,'res',false)}).join('')+'</div>':'')+
  '<div class="row" style="margin-top:10px"><button id="undo" style="flex:1">Undo last pitch</button><button id="newpa" style="flex:1">Reset count</button></div><p class="hint">An at-bat saves to the roster when it ends.</p>'}
-function show(){TCM=null;derive();document.body.className=season===null?'home':'';
- $('#sbar').innerHTML=season===null?'':'<div class="srow"><button data-home="1">All seasons</button><b>'+esc(sName(season))+'</b></div>';
- var tabs=season===null?[]:[['team','Team']].concat(canEdit?[['log','Log']]:[]);
+function show(){TCM=null;canEdit=canE();derive();document.body.className=season===null?'home':'';
+ $('#sbar').innerHTML=(season===null||!team)?'':'<div class="srow"><button data-home="1">All seasons</button><b>'+esc(sName(season))+'</b></div>';
+ var tabs=(season===null||!team||adminView)?[]:[['team','Team']].concat(canEdit?[['log','Log']]:[]);
  $('#tabs').innerHTML=tabs.map(function(t){return b(t[0],t[1],'tab',tab===t[0])}).join('');
  var a=$('#app');
  if(ready==='setup')a.innerHTML='<p class="hint">Firebase is not set up yet. Paste your Firebase config at the top of the script in index.html.</p>';
@@ -259,7 +293,10 @@ function show(){TCM=null;derive();document.body.className=season===null?'home':'
  else if(ready==='noaccess')a.innerHTML=noAccessView();
  else if(ready==='err')a.innerHTML='<p class="hint">Could not load the team data. Check your connection, or ask your coach to make sure your email is on the team list.</p><button id="signout" style="width:100%">Sign out</button>';
  else if(!ready)a.innerHTML='<p class="hint">Connecting...</p>';
- else if(season===null)a.innerHTML=homeView()+(canEdit?accessView():'')+'<button id="signout" style="width:100%;margin-top:16px">Sign out ('+esc(me)+')</button>';
+ else if(adminView)a.innerHTML=adminHtml();
+ else if(!team)a.innerHTML=teamsView();
+ else if(!teamDoc)a.innerHTML='<p class="hint">Loading team...</p>';
+ else if(season===null)a.innerHTML=statusHtml()+homeView()+(role==='coach'?accessView():'')+'<button id="switchteam" style="width:100%;margin-top:16px">Switch team</button><button id="signout" style="width:100%;margin-top:8px">Sign out ('+esc(me)+')</button>';
  else if(tab==='log'&&canEdit)a.innerHTML=logView();
  else if(pvw)a.innerHTML=pitcherView();
  else if(pid&&players.some(function(p){return p.id===pid}))a.innerHTML=profView();
@@ -286,21 +323,34 @@ document.addEventListener('click',async function(e){
  if(el.id==='resend'){try{await firebase.auth().currentUser.sendEmailVerification();toast('Email sent')}catch(x){toast('Wait a minute, then try again')}return}
  if(el.id==='verified'){var cu=firebase.auth().currentUser;await cu.reload();if(cu.emailVerified){await cu.getIdToken(true);location.reload()}else toast('Not verified yet. Tap the link in the email.');return}
  if(el.id==='retry'){location.reload();return}
- if(el.id==='addp'||el.id==='addc'){var ne=$('#mem').value.trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ne)){toast('Enter a valid email');return}try{await db.collection('members').doc(ne).set({role:el.id==='addc'?'coach':'player'});toast('Added '+ne)}catch(x){toast('Could not add')}return}
- if(d.rmmem){try{await db.collection('members').doc(d.rmmem).delete();toast('Removed')}catch(x){toast('Could not remove')}return}
- if(el.id==='demo'){if(!window.confirm('Add a Demo Season with a fake roster and at-bats?'))return;el.disabled=true;el.textContent='Loading demo data...';try{var dsid=await loadDemo(function(n){return db.collection(n)});toast('Demo Season added');season=dsid;tab='team';show()}catch(x){el.disabled=false;el.textContent='Load demo data';toast('Could not load demo data')}return}
- if(el.id==='delseason'){var dn=sName(season);if(!window.confirm('Permanently delete '+dn+'? This removes its roster and every at-bat. This cannot be undone.'))return;if(!window.confirm('Are you sure? '+dn+' will be gone for good.'))return;el.disabled=true;el.textContent='Deleting...';try{await deleteSeason(function(n){return db.collection(n)},season);season=null;pid=null;pvw='';cur={b:0,s:0,pitches:[]};fin=null;toast(dn+' deleted');show();window.scrollTo(0,0)}catch(x){el.disabled=false;el.textContent='Delete this season';toast('Could not delete. Try again.')}return}
+ if(el.id==='addp'||el.id==='addc'){var ne=$('#mem').value.trim().toLowerCase();if(!/^[^@\s_]+@[^@\s]+\.[^@\s]+$/.test(ne)){toast('Enter a valid email');return}try{await db.collection('memberships').doc(team+'_'+ne).set({teamId:team,email:ne,role:el.id==='addc'?'coach':'player',teamName:teamDoc.name});toast('Added '+ne)}catch(x){toast('Could not add')}return}
+ if(d.rmmem){try{await db.collection('memberships').doc(team+'_'+d.rmmem).delete();toast('Removed')}catch(x){toast('Could not remove')}return}
+ if(el.id==='joinbtn'){var jc=($('#jc').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(jc.length<4){toast('Enter your team code');return}el.disabled=true;
+  try{var cd=await db.collection('codes').doc(jc).get();if(!cd.exists){el.disabled=false;toast('That code was not found. Check it with your coach.');return}var ci=cd.data();
+   if(!myM.some(function(m){return m.teamId===ci.teamId}))await db.collection('memberships').doc(ci.teamId+'_'+me).set({teamId:ci.teamId,email:me,role:'player',teamName:ci.teamName||'Team',code:jc});
+   pickTeam(ci.teamId);toast('You joined '+(ci.teamName||'the team'))}catch(x){el.disabled=false;toast('Could not join. The code may have changed. Ask your coach for the new one.')}return}
+ if(el.id==='newcode'){el.disabled=true;try{await makeCode(team,teamDoc.name,teamDoc.code);toast('New team code ready')}catch(x){el.disabled=false;toast('Could not make a code')}return}
+ if(d.role){try{await db.collection('memberships').doc(team+'_'+d.role).update({role:d.to});toast(d.to==='coach'?'Now a coach':'Now a player')}catch(x){toast('Could not change role')}return}
+ if(el.id==='mkteam'){var tn=$('#tn').value.trim();if(!tn){toast('Enter a team name');return}el.disabled=true;
+  try{var tr=await db.collection('teams').add({name:tn,owner:me,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await db.collection('memberships').doc(tr.id+'_'+me).set({teamId:tr.id,email:me,role:'coach',teamName:tn});try{await makeCode(tr.id,tn,null)}catch(e2){}pickTeam(tr.id);toast('Team created. Your free trial has started.')}catch(x){el.disabled=false;toast('Could not create team')}return}
+ if(d.team){pickTeam(d.team);return}
+ if(el.id==='switchteam'){pickTeam(null);return}
+ if(el.id==='openadmin'){adminView=true;show();try{var sn2=await db.collection('teams').get();allTeams=sn2.docs.map(function(x){var o=x.data();o.id=x.id;return o})}catch(x){toast('Could not load teams')}show();return}
+ if(el.id==='closeadmin'){adminView=false;show();return}
+ if(d.act){var t0=allTeams.filter(function(t){return t.id===d.act})[0],bs=Math.max(Date.now(),paidEnd(t0)),nd=new Date(bs+365*864e5);if(!confirmAct(t0,nd))return;try{await db.collection('teams').doc(d.act).update({paidUntil:firebase.firestore.Timestamp.fromDate(nd)});t0.paidUntil=firebase.firestore.Timestamp.fromDate(nd);toast(t0.name+' active through '+fd(nd));show()}catch(x){toast('Could not activate')}return}
+ if(el.id==='demo'){if(!window.confirm('Add a Demo Season with a fake roster and at-bats?'))return;el.disabled=true;el.textContent='Loading demo data...';try{var dsid=await loadDemo(C);toast('Demo Season added');season=dsid;tab='team';show()}catch(x){el.disabled=false;el.textContent='Load demo data';toast('Could not load demo data')}return}
+ if(el.id==='delseason'){var dn=sName(season);if(!window.confirm('Permanently delete '+dn+'? This removes its roster and every at-bat. This cannot be undone.'))return;if(!window.confirm('Are you sure? '+dn+' will be gone for good.'))return;el.disabled=true;el.textContent='Deleting...';try{await deleteSeason(C,season);season=null;pid=null;pvw='';cur={b:0,s:0,pitches:[]};fin=null;toast(dn+' deleted');show();window.scrollTo(0,0)}catch(x){el.disabled=false;el.textContent='Delete this season';toast('Could not delete. Try again.')}return}
  if(d.sort!==undefined){var si=+d.sort;if(sortI===si)sortD=-sortD;else{sortI=si;sortD=si===0?1:-1}show()}
- else if(d.restore){try{await db.collection('seasons').doc(d.restore).update({archived:false});toast('Season restored')}catch(x){toast('Could not restore')}}
+ else if(d.restore){try{await C('seasons').doc(d.restore).update({archived:false});toast('Season restored')}catch(x){toast('Could not restore')}}
  else if(el.id==='exs'){exportStats()}
  else if(el.id==='exp'){exportPitches()}
- else if(el.id==='rename'){var rn=$('#rn').value.trim();if(!rn){toast('Enter a season name');return}var rf=db.collection('seasons').doc(season);try{try{await rf.update({name:rn})}catch(e1){await rf.set({name:rn,at:0})}toast('Season renamed')}catch(x){toast('Could not rename')}}
- else if(el.id==='archive'){var rf2=db.collection('seasons').doc(season);try{try{await rf2.update({archived:true})}catch(e1){await rf2.set({name:sName(season),at:0,archived:true})}season=null;pid=null;pvw='';toast('Season archived');show()}catch(x){toast('Could not archive')}}
+ else if(el.id==='rename'){var rn=$('#rn').value.trim();if(!rn){toast('Enter a season name');return}var rf=C('seasons').doc(season);try{try{await rf.update({name:rn})}catch(e1){await rf.set({name:rn,at:0})}toast('Season renamed')}catch(x){toast('Could not rename')}}
+ else if(el.id==='archive'){var rf2=C('seasons').doc(season);try{try{await rf2.update({archived:true})}catch(e1){await rf2.set({name:sName(season),at:0,archived:true})}season=null;pid=null;pvw='';toast('Season archived');show()}catch(x){toast('Could not archive')}}
  else if(d.season){season=d.season;tab='team';pid=null;pvw='';pf='';cnt='All';ptf='All';selPk='';cur={b:0,s:0,pitches:[]};fin=null;lp='';show();window.scrollTo(0,0)}
  else if(d.home){if(cur.pitches.length)toast('Unfinished at-bat cleared');season=null;pid=null;pvw='';pf='';cur={b:0,s:0,pitches:[]};fin=null;show();window.scrollTo(0,0)}
  else if(el.id==='mkseason'){var sn=$('#sn').value.trim();if(!sn){toast('Enter a season name first');return}var src=$('#sc').value;
-  try{var r=await db.collection('seasons').add({name:sn,at:Date.now()});
-   if(src){var ps=allP.filter(function(p){return (p.season||LEG)===src});for(var i=0;i<ps.length;i++){await db.collection('players').add({name:ps[i].name,season:r.id})}}
+  try{var r=await C('seasons').add({name:sn,at:Date.now()});
+   if(src){var ps=allP.filter(function(p){return (p.season||LEG)===src});for(var i=0;i<ps.length;i++){await C('players').add({name:ps[i].name,season:r.id})}}
    toast('Season created')}catch(x){toast('Could not create season')}}
  else if(d.tab){tab=d.tab;pid=null;pvw='';pf='';show()}
  else if(d.pid){pid=d.pid;pvw='';pf='';cnt='All';ptf='All';selPk='';show();window.scrollTo(0,0)}
@@ -314,17 +364,17 @@ document.addEventListener('click',async function(e){
 
  else if(d.ftog){var k=d.ftog;fin[k]=fin[k]?0:1;if((k==='sac'||k==='sf')&&fin[k])fin.qab=1;show()}
  else if(el.id==='finback'){var q=cur.pitches.pop();cur.b=q.b;cur.s=q.s;fin=null;show()}
- else if(el.id==='finsave'){try{await db.collection('abs').add({season:season,pid:lp,at:Date.now(),end:fin.end,pitcher:pit.trim(),rbi:fin.rbi,sac:fin.sac,sf:fin.sf,qab:fin.qab?1:0,pitches:cur.pitches});toast('At-bat saved: '+fin.end);cur={b:0,s:0,pitches:[]};fin=null}catch(x){toast('Could not save. Try again.')}show()}
+ else if(el.id==='finsave'){if(!canE()){toast('Subscription ended. Renew to keep logging.');return}try{await C('abs').add({season:season,pid:lp,at:Date.now(),end:fin.end,pitcher:pit.trim(),rbi:fin.rbi,sac:fin.sac,sf:fin.sf,qab:fin.qab?1:0,pitches:cur.pitches});toast('At-bat saved: '+fin.end);cur={b:0,s:0,pitches:[]};fin=null}catch(x){toast('Could not save. Try again.')}show()}
  else if(d.pt){P.t=P.t===d.pt?'':d.pt;show()}
  else if(d.out){if(d.out==='ip'){P.ip=!P.ip;show()}else logPitch(d.out)}
  else if(d.q){P.q=P.q===d.q?'':d.q;show()}
  else if(d.res){logPitch('ip',d.res)}
- else if(d.del){try{await db.collection('abs').doc(d.del).delete()}catch(x){toast('Could not delete')}}
+ else if(d.del){try{await C('abs').doc(d.del).delete()}catch(x){toast('Could not delete')}}
  else if(el.id==='undo'){var p=cur.pitches.pop();if(!p){toast('Nothing to undo');return}cur.b=p.b;cur.s=p.s;show()}
  else if(el.id==='newpa'){cur={b:0,s:0,pitches:[]};show()}
- else if(el.id==='savest'){var o={};SK.forEach(function(k){o[k[0]]=Math.max(0,parseInt($('#f_'+k[0]).value,10)||0)});try{await db.collection('players').doc(pid).update({st:o});toast('Stats saved')}catch(x){toast('Could not save stats')}}
+ else if(el.id==='savest'){var o={};SK.forEach(function(k){o[k[0]]=Math.max(0,parseInt($('#f_'+k[0]).value,10)||0)});try{await C('players').doc(pid).update({st:o});toast('Stats saved')}catch(x){toast('Could not save stats')}}
  else if(el.id==='add'){var n=$('#nm').value.trim();if(!n){toast('Enter a name first');return}
-  try{await db.collection('players').add({name:n,season:season});toast('Player added')}catch(x){toast('Could not add player')}}
+  try{await C('players').add({name:n,season:season});toast('Player added')}catch(x){toast('Could not add player')}}
 });
 document.addEventListener('change',function(e){if(e.target.id==='lp'){if(cur.pitches.length){toast('Finish or reset this at-bat first');show();return}lp=e.target.value}});
 document.addEventListener('input',function(e){if(e.target.id==='pn')pit=e.target.value});
@@ -337,17 +387,31 @@ document.addEventListener('pointerdown',function(e){
  if(!window.firebase||FIREBASE_CONFIG.apiKey.indexOf('PASTE')===0){ready='setup';show();return}
  firebase.initializeApp(FIREBASE_CONFIG);db=firebase.firestore();var subs=[];
  function rows(s){return s.docs.map(function(d){var o=d.data();o.id=d.id;return o})}
+ window.pickTeam=function(id){tsubs.forEach(function(f){f()});tsubs=[];team=id;teamDoc=null;role=null;allP=[];allA=[];seasons=[];mem=[];season=null;pid=null;pvw='';tab='team';
+  try{if(id)localStorage.setItem('sdp_team',id);else localStorage.removeItem('sdp_team')}catch(e){}
+  if(!id){show();return}
+  var m=myM.filter(function(x){return x.teamId===id})[0];role=m?m.role:null;show();
+  tsubs.push(db.collection('teams').doc(id).onSnapshot(function(s){teamDoc=s.exists?s.data():null;if(teamDoc)teamDoc.id=s.id;show()},function(){toast('Could not open team');pickTeam(null)}));
+  tsubs.push(C('players').onSnapshot(function(s){allP=rows(s);show()},function(){}));
+  tsubs.push(C('abs').onSnapshot(function(s){allA=rows(s).filter(function(a){return Array.isArray(a.pitches)});show()},function(){}));
+  tsubs.push(C('seasons').onSnapshot(function(s){seasons=rows(s);show()},function(){}));
+  if(role==='coach')tsubs.push(db.collection('memberships').where('teamId','==',id).onSnapshot(function(s){mem=rows(s);show()},function(){}));
+ };
+ window.confirmAct=function(t,nd){return window.confirm('Activate '+t.name+' through '+fd(nd)+'?')};
  firebase.auth().onAuthStateChanged(async function(u){
-  subs.forEach(function(f){f()});subs=[];allP=[];allA=[];seasons=[];mem=[];canEdit=false;season=null;pid=null;pvw='';
+  subs.forEach(function(f){f()});subs=[];myM=[];isAdm=false;adminView=false;pickTeam(null);
   if(!u){me=null;ready='login';show();return}
   me=(u.email||'').toLowerCase();
   if(!u.emailVerified){ready='verify';show();return}
   ready=false;show();
-  try{var m=await db.collection('members').doc(me).get();if(!m.exists){ready='noaccess';show();return}canEdit=m.data().role==='coach'}catch(e){ready='noaccess';show();return}
-  subs.push(db.collection('players').onSnapshot(function(s){allP=rows(s);ready=true;show()},function(){ready='err';show()}));
-  subs.push(db.collection('abs').onSnapshot(function(s){allA=rows(s).filter(function(a){return Array.isArray(a.pitches)});show()},function(){}));
-  subs.push(db.collection('seasons').onSnapshot(function(s){seasons=rows(s);show()},function(){}));
-  if(canEdit)subs.push(db.collection('members').onSnapshot(function(s){mem=rows(s);show()},function(){}));
+  try{isAdm=(await db.collection('admins').doc(me).get()).exists}catch(e){isAdm=false}
+  var first=true;
+  subs.push(db.collection('memberships').where('email','==',me).onSnapshot(function(s){myM=rows(s);ready=true;
+   if(first){first=false;var last=null;try{last=localStorage.getItem('sdp_team')}catch(e){}
+    var ids=myM.map(function(x){return x.teamId});if(last&&ids.indexOf(last)>=0)pickTeam(last);else if(ids.length===1)pickTeam(ids[0]);else show()}
+   else if(team&&!myM.some(function(x){return x.teamId===team})){toast('You were removed from this team');pickTeam(null)}
+   else{var mm=myM.filter(function(x){return x.teamId===team})[0];if(mm&&mm.role!==role){pickTeam(team)}else show()}
+  },function(){ready='err';show()}));
  });
 })();
 show();
