@@ -90,7 +90,7 @@ var FIREBASE_CONFIG={
 // =============================================================================================
 // ===== PASTE YOUR STRIPE PAYMENT LINK HERE (Stripe dashboard > Payment Links) =====
 var STRIPE_LINK="PASTE_STRIPE_PAYMENT_LINK";
-var PRICE='$100/year',TRIAL_DAYS=14;
+var OWNER='trentwasserman51@gmail.com';var PRICE='$100/year',TRIAL_DAYS=14;
 // ==================================================================================
 var mem=[],me=null,myM=[],team=null,teamDoc=null,role=null,isAdm=false,allTeams=[],adminView=false,tsubs=[];
 function C(n){return db.collection('teams').doc(team).collection(n)}
@@ -404,7 +404,7 @@ document.addEventListener('pointerdown',function(e){
   me=(u.email||'').toLowerCase();
   if(!u.emailVerified){ready='verify';show();return}
   ready=false;show();
-  try{isAdm=(await db.collection('admins').doc(me).get()).exists}catch(e){isAdm=false}
+  isAdm=me===OWNER;if(!isAdm){try{isAdm=(await db.collection('admins').doc(me).get()).exists}catch(e){isAdm=false}}
   var first=true;
   subs.push(db.collection('memberships').where('email','==',me).onSnapshot(function(s){myM=rows(s);ready=true;
    if(first){first=false;var last=null;try{last=localStorage.getItem('sdp_team')}catch(e){}
