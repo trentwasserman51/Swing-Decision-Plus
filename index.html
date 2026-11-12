@@ -131,26 +131,46 @@ function sMeta(id){var ps=allP.filter(function(p){return (p.season||LEG)===id}),
 function homeView(){var l=sList(),act=l.filter(function(x){return !x.archived}),arch=l.filter(function(x){return x.archived}),h='<p class="hint">Choose a season</p><div class="seasons">'+(act.length?act.map(function(x){return '<button class="season" data-season="'+esc(x.id)+'"><b>'+esc(x.name)+'</b><span>'+sMeta(x.id)+'</span></button>'}).join(''):'<p class="hint">No seasons yet.'+(canEdit?' Create your first one below.':'')+'</p>')+'</div>';
  if(arch.length)h+='<h2>Archived</h2>'+arch.map(function(x){return '<div class="row" style="margin-bottom:6px"><button data-season="'+esc(x.id)+'" style="flex:1;text-align:left">'+esc(x.name)+'</button>'+(canEdit?'<button data-restore="'+esc(x.id)+'">Restore</button>':'')+'</div>'}).join('');
  if(canEdit)h+='<h2>New season</h2><input id="sn" placeholder="Spring 2027" maxlength="30" aria-label="Season name" style="width:100%"><select id="sc" aria-label="Roster" style="width:100%;margin-top:8px"><option value="">Start with an empty roster</option>'+l.map(function(x){return '<option value="'+esc(x.id)+'">Copy players from '+esc(x.name)+'</option>'}).join('')+'</select><button class="on" id="mkseason" style="width:100%;margin-top:8px">Create season</button><p class="hint">Copying brings over player names only. Stats start at zero.</p>';
- if(canEdit&&isAdm)h+='<h2>Demo data</h2><button id="demo" style="width:100%">Load demo data</button><p class="hint">Adds a separate "Demo Season" with a fake roster of 12 hitters, 6 pitchers, and about 190 logged at-bats so you can see every screen filled in. Archive it from the season settings when you are done.</p>';
+ if(canEdit&&isAdm)h+='<h2>Demo data</h2><button id="demo" style="width:100%">Load demo data</button><p class="hint">Adds a separate "Demo Season" with a fake roster of 16 hitters (starters and bench), 11 pitchers (starters and relievers), and about 550 logged at-bats so you can see every screen filled in. Archive it from the season settings when you are done.</p>';
  return h}
 function demoGen(){var R=Math.random,pick=function(a){return a[Math.floor(R()*a.length)]},
- F=['Jake','Tyler','Ryan','Matt','Cole','Luke','Evan','Nick','Drew','Sam','Ben','Max','Alex','Zach','Owen'],
- L=['Carter','Brooks','Hayes','Morgan','Reed','Bennett','Foster','Hughes','Parker','Sullivan','Coleman','Ward','Price','Murphy','Bailey'],
- PN=['Lopez (RHP)','Kim (LHP)','Grant (RHP)','Silva (RHP)','Dunn (LHP)','Vance (RHP)'],
- names=[],used={};while(names.length<12){var n=pick(F)+' '+pick(L);if(!used[n]){used[n]=1;names.push(n)}}
- var hitters=names.map(function(n){return {name:n,eye:0.15+R()*0.25,con:0.7+R()*0.2,pow:R()}}),abs=[],now=Date.now();
- hitters.forEach(function(hz,hi){for(var k=0;k<16;k++){var b=0,s=0,ps=[],end='',pitcher=pick(PN);
-  while(!end){var x=Math.round(30+R()*140),y=Math.round(45+R()*150),inz=x>=60&&x<=140&&y>=70&&y<=170,
-   t=(b>s?(R()<0.75?'FB':pick(['CH','SL'])):(s===2?pick(['SL','CB','CH','FB']):(R()<0.6?'FB':pick(['CH','CB','SL'])))),
-   sw=R()<(inz?0.68:hz.eye+(s===2?0.15:0)),out,res='',q='',cb=b,cs=s;
+ F=['Jake','Tyler','Ryan','Matt','Cole','Luke','Evan','Nick','Drew','Sam','Ben','Max','Alex','Zach','Owen','Dylan','Eli','Gavin'],
+ L=['Carter','Brooks','Hayes','Morgan','Reed','Bennett','Foster','Hughes','Parker','Sullivan','Coleman','Ward','Price','Murphy','Bailey','Russo','Pierce','Dawson'],
+ PIT=[{n:'Lopez (RHP)',w:20,z:.52,m:{FB:.55,SL:.2,CH:.15,CB:.1}},
+  {n:'Kim (LHP)',w:16,z:.46,m:{FB:.5,CT:.2,CH:.2,SL:.1}},
+  {n:'Grant (RHP)',w:14,z:.5,m:{SI:.45,FB:.2,CH:.15,SL:.2}},
+  {n:'Silva (RHP)',w:11,z:.44,m:{FB:.5,SP:.25,CB:.15,SL:.1}},
+  {n:'Dunn (LHP)',w:9,z:.4,m:{FB:.45,CB:.3,CH:.25}},
+  {n:'Vance (RHP)',w:8,z:.48,m:{FB:.65,SL:.25,CH:.1}},
+  {n:'Hale (RHP)',w:4,z:.5,m:{SI:.5,SL:.3,FB:.2}},
+  {n:'Ortiz (LHP)',w:3,z:.43,m:{FB:.6,CH:.4}},
+  {n:'Pratt (RHP)',w:2,z:.55,m:{FB:.7,SP:.3}},
+  {n:'Reyes (RHP)',w:1.5,z:.35,m:{FB:.6,CB:.4}},
+  {n:'Boyd (LHP)',w:1,z:.45,m:{FB:.7,CH:.3}}],
+ TW=PIT.reduce(function(a,p){return a+p.w},0),
+ wp=function(o){var t=0,k;for(k in o)t+=o[k];var r=R()*t;for(k in o){r-=o[k];if(r<=0)return k}return k},
+ pickP=function(){var r=R()*TW;for(var i=0;i<PIT.length;i++){r-=PIT[i].w;if(r<=0)return PIT[i]}return PIT[0]},
+ OFF={CH:1,SP:1,CB:1,SL:1,CT:1},LOW={SP:1,SI:1,CH:1,CB:1,SL:1},
+ PA=[64,60,57,54,50,46,43,38,33,27,22,16,11,8,5,3],
+ names=[],used={};while(names.length<PA.length){var n=pick(F)+' '+pick(L);if(!used[n]){used[n]=1;names.push(n)}}
+ var order=names.map(function(_,i){return i}).sort(function(){return R()-.5});
+ var hitters=names.map(function(n,i){return {name:n,n:Math.max(2,PA[order[i]]+Math.round(R()*6-3)),eye:0.1+R()*0.32,con:0.62+R()*0.3,pow:R(),zs:0.55+R()*0.25}}),abs=[],now=Date.now();
+ hitters.forEach(function(hz,hi){for(var k=0;k<hz.n;k++){var b=0,s=0,ps=[],end='',pt=pickP(),sac=0,sf=0;
+  while(!end){var t0=wp(Object.keys(pt.m).reduce(function(o,q){var w=pt.m[q];if(b>s&&(q==='FB'||q==='SI'))w*=2.2;else if(b>s&&OFF[q])w*=0.6;if(s===2){if(OFF[q])w*=1.8;else w*=0.6}o[q]=w;return o},{})),t=t0,
+   z=pt.z+(b>s?0.1:0)+(s===2&&b<2?-0.1:0)+(b===3?0.12:0)-(LOW[t]&&t!=='SI'?0.04:0),inz=R()<z,x,y,nn=0;
+   if(inz){x=60+R()*80;y=LOW[t]?85+R()*85:70+R()*100}
+   else{do{x=20+R()*160;y=LOW[t]?150+R()*70:30+R()*160;nn++}while(nn<20&&x>=60&&x<=140&&y>=70&&y<=170)}
+   x=Math.round(x);y=Math.round(y);
+   var sw=R()<(inz?hz.zs+(s===2?0.12:0)-(b===0&&s===0?0.06:0):hz.eye*(OFF[t]?1.1:1)+(s===2?0.15:0)),out,res='',q='',cb=b,cs=s;
    if(!sw){if(!inz&&R()<0.012){out='hbp';end='HBP'}else if(inz){out='cs';s++;if(s>=3)end='K'}else{out='ball';b++;if(b>=4)end='BB'}}
-   else{var r=R(),wh=(inz?1-hz.con:0.45);if(r<wh){out='sm';s++;if(s>=3)end='K'}else if(r<wh+(1-wh)*0.42){out='foul';if(s<2)s++}
+   else{var r=R(),wh=Math.min(0.85,(inz?1-hz.con:0.45)*(OFF[t]?1.3:0.9));if(r<wh){out='sm';s++;if(s>=3)end='K'}else if(r<wh+(1-wh)*0.42){out='foul';if(s<2)s++}
     else{out='ip';q=R()<(inz?0.35+hz.pow*0.25:0.12)?'Hard':'Soft';var h=R();
-     res=q==='Hard'?(h<0.06+hz.pow*0.06?'HR':h<0.25?'2B':h<0.27?'3B':h<0.62?'1B':'Out'):(h<0.27?'1B':'Out');end=res}}
+     res=q==='Hard'?(h<0.04+hz.pow*0.05?'HR':h<0.2?'2B':h<0.215?'3B':h<0.55?'1B':'Out'):(h<0.23?'1B':'Out');end=res}}
    ps.push({b:cb,s:cs,t:t,x:x,y:y,inz:inz,out:out,res:res,q:out==='ip'?q:''})}
-  abs.push({hi:hi,pitcher:pitcher,end:end,pitches:ps,at:now-(40-k*2.5)*864e5+hi*6e5,
-   rbi:end==='HR'?1+Math.floor(R()*2):((end==='1B'||end==='2B'||end==='3B')&&R()<0.35?1:0),sac:0,sf:0,
-   qab:(ps[ps.length-1].q==='Hard'||end==='BB'||end==='HBP'||ps.length>=6)?1:0})}});
+  if(end==='Out'&&R()<0.04){if(R()<0.5)sf=1;else sac=1}
+  abs.push({hi:hi,pitcher:pt.n,end:end,pitches:ps,at:now-(65-k*(60/hz.n)+R()*3)*864e5+hi*6e5,
+   rbi:end==='HR'?1+Math.floor(R()*2):((end==='1B'||end==='2B'||end==='3B')&&R()<0.35?1:(sf?1:0)),sac:sac,sf:sf,
+   qab:(ps[ps.length-1].q==='Hard'||end==='BB'||end==='HBP'||ps.length>=6||sac||sf)?1:0})}});
  return {names:names,abs:abs}}
 async function loadDemo(COL){var g=demoGen(),sr=await COL('seasons').add({name:'Demo Season',at:Date.now()}),ids=[];
  for(var i=0;i<g.names.length;i++){var pr=await COL('players').add({name:g.names[i],season:sr.id});ids.push(pr.id)}
