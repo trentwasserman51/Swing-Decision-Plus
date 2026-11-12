@@ -180,8 +180,8 @@ function csv(rows){return rows.map(function(r){return r.map(function(v){v=v==nul
 function fname(x){return (sName(season)+' '+x).replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase()+'.csv'}
 function sendCsv(rows,label){try{var bl=new Blob(['\ufeff'+csv(rows)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=fname(label);document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);toast('Export ready')}catch(e){toast('Could not export')}}
 function exportStats(){var rows=[SHN];players.forEach(function(p){rows.push([p.name].concat(vals(st(p))))});rows.push(['Team'].concat(vals(sum(players))));sendCsv(rows,'stats')}
-function exportPitches(){var rows=[['Season','Hitter','Pitcher','Date','At-bat result','RBI','QAB','Pitch number','Balls','Strikes','Pitch type','Plate X','Plate Y','In zone','Outcome','Result','Contact','Good decision']];
- abs.slice().sort(function(x,y){return (x.at||0)-(y.at||0)}).forEach(function(a){a.pitches.forEach(function(p,i){rows.push([sName(season),nm(a.pid),a.pitcher||'',a.at?new Date(a.at).toISOString().slice(0,10):'',a.end,a.rbi||0,a.qab?1:0,i+1,p.b,p.s,p.t||'',p.x,p.y,p.inz?'Y':'N',OL[p.out]||p.out,p.res||'',p.q||'',p.out==='hbp'?'':(good(p)?'Y':'N')])})});
+function exportPitches(){var rows=[['Season','Hitter','Pitcher','Date','At-bat result','RBI','QAB','Pitch number','Balls','Strikes','Pitch type','Plate X','Plate Y','In zone','Outcome','Result','Hard hit','Good decision']];
+ abs.slice().sort(function(x,y){return (x.at||0)-(y.at||0)}).forEach(function(a){a.pitches.forEach(function(p,i){rows.push([sName(season),nm(a.pid),a.pitcher||'',a.at?new Date(a.at).toISOString().slice(0,10):'',a.end,a.rbi||0,a.qab?1:0,i+1,p.b,p.s,p.t||'',p.x,p.y,p.inz?'Y':'N',OL[p.out]||p.out,p.res||'',p.q==='Hard'?'Y':(p.q?'N':''),p.out==='hbp'?'':(good(p)?'Y':'N')])})});
  sendCsv(rows,'pitches')}
 function toolsView(){var h='';h+='<h2>Export</h2><div class="row"><button id="exs" style="flex:1">Season stats (CSV)</button><button id="exp" style="flex:1">All pitches (CSV)</button></div><p class="hint">Downloads a file you can open in Excel or Google Sheets. The pitch file has one row per pitch for this season.</p>';
  if(canEdit)h+='<h2>Season settings</h2><div class="row"><input id="rn" value="'+esc(sName(season))+'" maxlength="30" aria-label="Season name"><button id="rename">Rename</button></div><button id="archive" style="width:100%;margin-top:8px">Archive this season</button><p class="hint">Archiving hides the season from the home screen. Nothing is deleted, and you can restore it from the Archived list.</p><button id="delseason" style="width:100%;margin-top:8px;color:var(--bad);border-color:var(--bad)">Delete this season</button><p class="hint">Deleting permanently removes this season, its roster, and every logged at-bat. This cannot be undone.</p>';
@@ -191,8 +191,8 @@ var TCM=null,fin=null,selPk='',pit='',pf='',pvw='';
 function trk(id){if(!TCM){TCM={};abs.forEach(function(a){var s=TCM[a.pid]||(TCM[a.pid]={qab:0,pa:0,b1:0,b2:0,b3:0,hr:0,bb:0,k:0,rbi:0,sac:0,sf:0,hh:0,ab:0}),e=a.end,l=a.pitches[a.pitches.length-1]||{};s.pa++;s.qab+=a.qab?1:0;s.rbi+=a.rbi||0;s.sac+=a.sac?1:0;s.sf+=a.sf?1:0;if(e==='1B')s.b1++;else if(e==='2B')s.b2++;else if(e==='3B')s.b3++;else if(e==='HR')s.hr++;else if(e==='BB'||e==='HBP')s.bb++;else if(e==='K')s.k++;if(l.out==='ip'&&l.q==='Hard')s.hh++;if(!(e==='BB'||e==='HBP'||a.sac||a.sf))s.ab++})}return TCM[id]||{}}
 function endTxt(l,k){var o={H:0,O:0,K:0,BB:0};l.forEach(function(p){if(p.last&&p.b+'-'+p.s===k){var e=p.end;if(e==='1B'||e==='2B'||e==='3B'||e==='HR')o.H++;else if(e==='Out')o.O++;else if(e==='K')o.K++;else o.BB++}});var r=[];['H','O','K','BB'].forEach(function(x){if(o[x])r.push(o[x]+x)});return r.join(' ')||'-'}
 function tags(x){var t=[];if(x.rbi)t.push(x.rbi+' RBI');if(x.sac)t.push('SAC');if(x.sf)t.push('SF');if(x.qab)t.push('QAB');return t.length?'<br><small>'+t.join(' · ')+'</small>':''}
-function autoQ(){var l=cur.pitches[cur.pitches.length-1]||{};return l.q==='Hard'||fin.end==='BB'||fin.end==='HBP'||cur.pitches.length>=6}
-function finView(){return '<div class="note"><b>'+esc(nm(lp))+' vs '+esc(pit)+': '+fin.end+'</b> ('+cur.pitches.length+' pitches)</div><p class="hint">RBI</p><div class="g5">'+[0,1,2,3,4].map(function(v){return b(v,v,'frbi',fin.rbi===v)}).join('')+'</div><div class="g3">'+b('sac','Sac bunt','ftog',fin.sac)+b('sf','Sac fly','ftog',fin.sf)+b('qab','Quality at-bat','ftog',fin.qab)+'</div><p class="hint">Quality at-bat starts on if the hitter hit it hard, walked, or saw 6 or more pitches. Change it to match your rule.</p><button class="on" id="finsave" style="width:100%">Save at-bat</button><button id="finback" style="width:100%;margin-top:8px">Undo last pitch</button>'}
+function autoQ(){var l=cur.pitches[cur.pitches.length-1]||{};return !!(l.q==='Hard'||fin.end==='BB'||fin.end==='HBP'||cur.pitches.length>=6||fin.sac||fin.sf)}
+function finView(){return '<div class="note"><b>'+esc(nm(lp))+' vs '+esc(pit)+': '+fin.end+'</b> ('+cur.pitches.length+' pitches)</div><p class="hint">RBI</p><div class="g5">'+[0,1,2,3,4].map(function(v){return b(v,v,'frbi',fin.rbi===v)}).join('')+'</div><div class="g3" style="grid-template-columns:repeat(2,1fr)">'+b('sac','Sac bunt','ftog',fin.sac)+b('sf','Sac fly','ftog',fin.sf)+'</div><div class="note"><b>Quality at-bat: '+(autoQ()?'Yes':'No')+'</b><br><small>Counted automatically: hard-hit ball, walk or hit by pitch, 6 or more pitches, or a sac bunt or sac fly.</small></div><button class="on" id="finsave" style="width:100%">Save at-bat</button><button id="finback" style="width:100%;margin-top:8px">Undo last pitch</button>'}
 function pkey(a){return (a.pitcher||'').trim().toLowerCase()}
 function PR(){return allP.filter(function(p){return p.season==='_pitchers'}).sort(function(x,y){return (x.name||'').localeCompare(y.name||'')})}
 function hand(p){return p&&p.r&&p.r.throws?' ('+p.r.throws+')':''}
@@ -206,16 +206,16 @@ function pitcherTable(){var ps=pitchers();if(!ps.length)return '<p class="hint">
 function pitcherView(){
  var k=pvw,pp=pitchers().filter(function(x){return x.k===k})[0];
  if(!pp)return '<button data-back="1">Back to team</button><p class="hint">No at-bats logged for this pitcher yet.</p>';
- var l=flat().filter(function(x){return x.pk===k}),c=calc(l),s=pas(pp.abs),f=l.filter(function(x){return x.b===0&&x.s===0}),ty=l.filter(function(x){return x.t}),T4=['FB','CH','CB','SL'],
- mix=T4.map(function(t){return t+' '+pct(ty.filter(function(x){return x.t===t}).length,ty.length)}).join(' · '),
+ var l=flat().filter(function(x){return x.pk===k}),c=calc(l),s=pas(pp.abs),f=l.filter(function(x){return x.b===0&&x.s===0}),ty=l.filter(function(x){return x.t}),T4=TYPES.filter(function(t){return ty.some(function(x){return x.t===t})}),
+ mix=T4.map(function(t){return t+' '+pct(ty.filter(function(x){return x.t===t}).length,ty.length)}).join(' · ')||'no pitch types logged yet',
  rows=KEYS.map(function(q){var lc=l.filter(function(x){return x.b+'-'+x.s===q}),tc=lc.filter(function(x){return x.t});return '<tr><td>'+q+'</td><td>'+lc.length+'</td>'+T4.map(function(t){return '<td>'+pct(tc.filter(function(x){return x.t===t}).length,tc.length)+'</td>'}).join('')+'<td>'+pct(lc.filter(function(x){return x.inz}).length,lc.length)+'</td></tr>'}).join(''),
- lf=l.filter(function(x){return ptf==='All'||x.t===ptf}),TC={FB:'#ffd23f',CH:'#5be28f',CB:'#c084fc',SL:'#38bdf8'},
+ lf=l.filter(function(x){return ptf==='All'||x.t===ptf}),TC={FB:'#ffd23f',SI:'#fb923c',CT:'#f472b6',CH:'#5be28f',SP:'#2dd4bf',CB:'#c084fc',SL:'#38bdf8'},
  d=lf.filter(function(x){return x.out!=='hbp'}).map(function(x){var rg=x.key===selPk?'<circle cx="'+x.x+'" cy="'+x.y+'" r="9" fill="none" stroke="var(--acc)" stroke-width="3"/>':'';return rg+'<circle cx="'+x.x+'" cy="'+x.y+'" r="5" fill="'+(TC[x.t]||'#9db5e0')+'" stroke="var(--bg)"/><circle cx="'+x.x+'" cy="'+x.y+'" r="10" fill="transparent" data-pk="'+x.key+'" style="cursor:pointer"/>'}).join(''),hs={};
  pp.abs.forEach(function(a){(hs[a.pid]=hs[a.pid]||[]).push(a)});
  return '<button data-back="1">Back to team</button><h2>'+esc(pp.name)+hand(pp)+'</h2>'+(canEdit&&pp.r&&!pp.abs.length?'<button id="rmpit" data-rid="'+pp.r.id+'">Remove from pitcher list</button>':'')+'<div class="stat"><div><b>'+l.length+'</b><span>Pitches</span></div><div><b>'+pct(l.filter(function(x){return x.inz}).length,l.length)+'</b><span>Zone</span></div><div><b>'+pct(f.filter(strikeish).length,f.length)+'</b><span>1st-pitch strike</span></div><div><b>'+c.whiff+'</b><span>Whiff</span></div></div><div class="stat"><div><b>'+s.pa+'</b><span>PA</span></div><div><b>'+s.avg+'</b><span>AVG against</span></div><div><b>'+s.k+'</b><span>K</span></div><div><b>'+s.bb+'</b><span>BB</span></div></div>'+
  '<div class="note"><b>Tendencies</b> (overall: '+mix+')<br>First pitch: '+tp(f)+'<br>Two strikes: '+tp(l.filter(function(x){return x.s===2}))+'<br>Behind in the count: '+tp(l.filter(function(x){return x.b>x.s}))+'<br>Ahead in the count: '+tp(l.filter(function(x){return x.s>x.b}))+'</div>'+
- '<h2>Pitch mix by count</h2><div class="wrap"><table><tr><th>Count</th><th>Pit</th><th>FB</th><th>CH</th><th>CB</th><th>SL</th><th>Zone</th></tr>'+rows+'</table></div>'+
- '<h2>Locations</h2><div class="chips">'+['All'].concat(T4).map(function(v){return b(v,v,'ptf',ptf===v)}).join('')+'</div>'+plate('pv',d)+detail(lf)+'<p class="hint">Dot color shows pitch type: <span style="color:#ffd23f">FB</span> <span style="color:#5be28f">CH</span> <span style="color:#c084fc">CB</span> <span style="color:#38bdf8">SL</span>. Tap a dot for details.</p>'+
+ '<h2>Pitch mix by count</h2><div class="wrap"><table><tr><th>Count</th><th>Pit</th>'+T4.map(function(t){return '<th>'+t+'</th>'}).join('')+'<th>Zone</th></tr>'+rows+'</table></div>'+
+ '<h2>Locations</h2><div class="chips">'+['All'].concat(T4).map(function(v){return b(v,v,'ptf',ptf===v)}).join('')+'</div>'+plate('pv',d)+detail(lf)+'<p class="hint">Dot color shows pitch type: '+TYPES.map(function(t){return '<span style="color:'+TC[t]+'">'+t+'</span>'}).join(' ')+'. Tap a dot for details.</p>'+
  '<h2>Hitters against him</h2><div class="wrap"><table><tr><th>Hitter</th><th>PA</th><th>AVG</th><th>K</th><th>BB</th></tr>'+Object.keys(hs).map(function(i){var q=pas(hs[i]);return '<tr><td><button class="lnk" data-pid="'+i+'">'+esc(nm(i))+'</button></td><td>'+q.pa+'</td><td>'+q.avg+'</td><td>'+q.k+'</td><td>'+q.bb+'</td></tr>'}).join('')+'</table></div>'}
 function flat(id){var o=[];abs.slice().sort(function(x,y){return (x.at||0)-(y.at||0)}).forEach(function(a){if(!id||a.pid===id)a.pitches.forEach(function(p,i){o.push(Object.assign({},p,{pid:a.pid,pk:pkey(a),pitcher:a.pitcher||'',key:a.id+'_'+i,last:i===a.pitches.length-1,end:a.end}))})});return o}
 function calc(l){var d=l.filter(function(p){return p.out!=='hbp'}),sw=d.filter(swung),iz=d.filter(function(p){return p.inz}),oz=d.filter(function(p){return!p.inz});
@@ -224,15 +224,15 @@ function plate(id,inner){return '<svg id="'+id+'" viewBox="0 0 200 240" role="im
 function b(v,l,k,on){return '<button class="'+(on?'on':'')+'" data-'+k+'="'+v+'">'+l+'</button>'}
 var OL={ball:'Ball',cs:'Called strike',sm:'Swing and miss',foul:'Foul',ip:'In play',hbp:'Hit by pitch'},SO={ball:'ball',cs:'called K',sm:'swing/miss',foul:'foul',hbp:'HBP'};
 function seq(a){return a.pitches.map(function(p){return p.b+'-'+p.s+' '+(p.t?p.t+' ':'')+(p.out==='ip'?p.res:SO[p.out])}).join(' · ')}
-var TN={FB:'Fastball',CH:'Changeup',CB:'Curveball',SL:'Slider'};
+var TN={FB:'Fastball',SI:'Sinker',CT:'Cutter',CH:'Changeup',SP:'Splitter',CB:'Curveball',SL:'Slider'},TYPES=['FB','SI','CT','CH','SP','CB','SL'];
 function detail(l){var p=l.filter(function(x){return x.key===selPk})[0];if(!p)return '<p class="hint">Tap a dot to see what happened on that pitch.</p>';
  var dc=p.out==='hbp'?'':(good(p)?'<b class="good">Good decision</b>':'<b class="bad">Bad decision</b>');
- return '<div class="note"><b>'+(pid?'':esc(nm(p.pid))+': ')+'Count '+p.b+'-'+p.s+(p.t?' · '+TN[p.t]:'')+'</b><br>'+OL[p.out]+(p.out==='ip'?': '+p.res+(p.q?' ('+p.q.toLowerCase()+' contact)':''):'')+'<br>'+(p.inz?'In the zone':'Outside the zone')+(dc?' · '+dc:'')+(p.last?'<br>Ended the at-bat: '+p.end:'')+'<br><button data-clr="1" style="min-height:36px;margin-top:6px">Clear</button></div>'}
+ return '<div class="note"><b>'+(pid?'':esc(nm(p.pid))+': ')+'Count '+p.b+'-'+p.s+(p.t?' · '+TN[p.t]:'')+'</b><br>'+OL[p.out]+(p.out==='ip'?': '+p.res+(p.q?' ('+(p.q==='Hard'?'hard hit':'not hard hit')+')':''):'')+'<br>'+(p.inz?'In the zone':'Outside the zone')+(dc?' · '+dc:'')+(p.last?'<br>Ended the at-bat: '+p.end:'')+'<br><button data-clr="1" style="min-height:36px;margin-top:6px">Clear</button></div>'}
 function plist(l){
  if(!l.length)return '<p class="hint">No pitches logged for this selection yet.</p>';
  var r=l.slice().reverse().slice(0,40);
  return '<h2>Pitch by pitch</h2><ul>'+r.map(function(p){var dc=p.out==='hbp'?'':(good(p)?'<b class="good">Good</b>':'<b class="bad">Bad</b>');
-  return '<li'+(p.key===selPk?' style="background:var(--card)"':'')+'><span><b>'+p.b+'-'+p.s+'</b> '+(p.t||'')+' '+OL[p.out]+(p.out==='ip'?': '+p.res+(p.q?' ('+p.q.toLowerCase()+')':''):'')+', '+(p.inz?'in zone':'out of zone')+(p.last?' - ends at-bat: '+p.end:'')+(pid?'':' - '+esc(nm(p.pid)))+'</span>'+dc+'</li>'}).join('')+'</ul>'+(l.length>40?'<p class="hint">Showing the latest 40 of '+l.length+'.</p>':'')}
+  return '<li'+(p.key===selPk?' style="background:var(--card)"':'')+'><span><b>'+p.b+'-'+p.s+'</b> '+(p.t||'')+' '+OL[p.out]+(p.out==='ip'?': '+p.res+(p.q?' ('+(p.q==='Hard'?'hard hit':'not hard hit')+')':''):'')+', '+(p.inz?'in zone':'out of zone')+(p.last?' - ends at-bat: '+p.end:'')+(pid?'':' - '+esc(nm(p.pid)))+'</span>'+dc+'</li>'}).join('')+'</ul>'+(l.length>40?'<p class="hint">Showing the latest 40 of '+l.length+'.</p>':'')}
 function report(l){
  if(pf)l=l.filter(function(p){return p.pk===pf});var t=calc(l),rows='',worst=null,lt=l.filter(function(p){return ptf==='All'||p.t===ptf});
  KEYS.forEach(function(k){var c=calc(lt.filter(function(p){return p.b+'-'+p.s===k}));
@@ -245,7 +245,7 @@ function report(l){
  return '<div class="stat"><div><b>'+t.dec+'</b><span>Good decisions</span></div><div><b>'+t.chase+'</b><span>Chase</span></div><div><b>'+t.zsw+'</b><span>Zone swing</span></div><div><b>'+t.whiff+'</b><span>Whiff</span></div></div>'+
  (worst?'<div class="note">Work on the '+worst.k+' count first: '+Math.round(worst.v*100)+'% good decisions over '+worst.c.dn+' pitches.</div>':'<p class="hint">Log at least 3 pitches in a count to see where to focus.</p>')+
  '<div class="wrap"><table><tr><th>Count</th><th>Pit</th><th>Swing</th><th>Chase</th><th>Whiff</th><th>Good</th><th>Ended</th></tr>'+rows+'</table></div>'+
- '<h2>Pitches: '+(cnt==='All'?'all counts':'count '+cnt)+(pf?' vs '+esc(pname(pf)):'')+'</h2><div class="chips">'+['All','FB','CH','CB','SL'].map(function(v){return b(v,v,'ptf',ptf===v)}).join('')+(cnt!=='All'?b('All','Show all counts','cnt',false):'')+(pf?b('-','All pitchers','pf',false):'')+'</div>'+plate('zv',d)+detail(zl)+
+ '<h2>Pitches: '+(cnt==='All'?'all counts':'count '+cnt)+(pf?' vs '+esc(pname(pf)):'')+'</h2><div class="chips">'+['All'].concat(TYPES).map(function(v){return b(v,v,'ptf',ptf===v)}).join('')+(cnt!=='All'?b('All','Show all counts','cnt',false):'')+(pf?b('-','All pitchers','pf',false):'')+'</div>'+plate('zv',d)+detail(zl)+
  '<p class="hint">Filled dot = swing, ring = take. Green = good decision, red = bad. A good decision is a swing at a pitch in the zone or a take outside it. Chase = swings outside the zone. Tap a count in the table to see just those pitches.</p>'+plist(zl)}
 var SK=[['qab','QAB'],['pa','PA'],['b1','1B'],['b2','2B'],['b3','3B'],['hr','HR'],['bb','BB/HBP'],['k','K'],['rbi','RBI'],['sac','SAC'],['sf','SF'],['hh','HH'],['ab','AB']];
 function base(p){var s={};SK.forEach(function(k){s[k[0]]=Number(p&&p.st&&p.st[k[0]])||0});return s}
@@ -283,9 +283,9 @@ function logView(){
  return '<select id="lp" aria-label="Hitter">'+players.map(function(p){return '<option value="'+p.id+'"'+(p.id===lp?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')+'</select>'+pitPick()+''+
  '<div class="count"><b>'+cur.b+'-'+cur.s+'</b><span>Pitch '+(cur.pitches.length+1)+' of this at-bat</span></div>'+
  '<p class="hint">1. Tap where the pitch crossed the plate (catcher view).</p>'+plate('pz',dot)+
- '<p class="hint">2. Pitch type (optional)</p><div class="g4">'+[['FB','Fastball'],['CH','Change'],['CB','Curve'],['SL','Slider']].map(function(x){return b(x[0],x[1],'pt',P.t===x[0])}).join('')+'</div>'+
+ '<p class="hint">2. Pitch type (optional)</p><div class="g4">'+[['FB','Fastball'],['SI','Sinker'],['CT','Cutter'],['CH','Change'],['SP','Splitter'],['CB','Curve'],['SL','Slider']].map(function(x){return b(x[0],x[1],'pt',P.t===x[0])}).join('')+'</div>'+
  '<p class="hint">3. What the hitter did</p><div class="g3">'+out.map(function(o){return b(o[0],o[1],'out',P.ip&&o[0]==='ip')}).join('')+'</div>'+
- (P.ip?'<p class="hint">Contact and result</p><div class="chips">'+b('Hard','Hard hit','q',P.q==='Hard')+b('Soft','Soft','q',P.q==='Soft')+'</div><div class="g5">'+['1B','2B','3B','HR','Out'].map(function(v){return b(v,v,'res',false)}).join('')+'</div>':'')+
+ (P.ip?'<p class="hint">Hard hit?</p><div class="chips">'+b('Hard','Yes','q',P.q==='Hard')+b('Soft','No','q',P.q==='Soft')+'</div><p class="hint">Result</p><div class="g5">'+['1B','2B','3B','HR','Out'].map(function(v){return b(v,v,'res',false)}).join('')+'</div>':'')+
  '<div class="row" style="margin-top:10px"><button id="undo" style="flex:1">Undo last pitch</button><button id="newpa" style="flex:1">Reset count</button></div><p class="hint">An at-bat saves to the roster when it ends.</p>'}
 function show(){TCM=null;canEdit=canE();derive();document.body.className=season===null?'home':'';
  $('#sbar').innerHTML=(season===null||!team)?'':'<div class="srow"><button data-home="1">All seasons</button><b>'+esc(sName(season))+'</b></div>';
@@ -315,7 +315,7 @@ async function logPitch(out,res){
  else if(out==='foul'){if(cur.s<2)cur.s++}
  else if(out==='ip')end=res;else end='HBP';
  cur.pitches.push(p);P={x:null,y:null,t:'',q:'',ip:false};
- if(end){fin={end:end,rbi:0,sac:0,sf:0};fin.qab=autoQ()}
+ if(end){fin={end:end,rbi:0,sac:0,sf:0}}
 
  show()}
 document.addEventListener('click',async function(e){
@@ -367,11 +367,11 @@ document.addEventListener('click',async function(e){
  else if(d.ptf){ptf=d.ptf;show()}
  else if(d.frbi){fin.rbi=+d.frbi;show()}
 
- else if(d.ftog){var k=d.ftog;fin[k]=fin[k]?0:1;if((k==='sac'||k==='sf')&&fin[k])fin.qab=1;show()}
+ else if(d.ftog){var k=d.ftog;fin[k]=fin[k]?0:1;show()}
  else if(el.id==='finback'){var q=cur.pitches.pop();cur.b=q.b;cur.s=q.s;fin=null;show()}
- else if(el.id==='finsave'){if(!canE()){toast('Subscription ended. Renew to keep logging.');return}try{await C('abs').add({season:season,pid:lp,at:Date.now(),end:fin.end,pitcher:pit.trim(),rbi:fin.rbi,sac:fin.sac,sf:fin.sf,qab:fin.qab?1:0,pitches:cur.pitches});toast('At-bat saved: '+fin.end);cur={b:0,s:0,pitches:[]};fin=null}catch(x){toast('Could not save. Try again.')}show()}
+ else if(el.id==='finsave'){if(!canE()){toast('Subscription ended. Renew to keep logging.');return}try{await C('abs').add({season:season,pid:lp,at:Date.now(),end:fin.end,pitcher:pit.trim(),rbi:fin.rbi,sac:fin.sac,sf:fin.sf,qab:autoQ()?1:0,pitches:cur.pitches});toast('At-bat saved: '+fin.end);cur={b:0,s:0,pitches:[]};fin=null}catch(x){toast('Could not save. Try again.')}show()}
  else if(d.pt){P.t=P.t===d.pt?'':d.pt;show()}
- else if(d.out){if(d.out==='ip'){P.ip=!P.ip;show()}else logPitch(d.out)}
+ else if(d.out){if(d.out==='ip'){P.ip=!P.ip;if(P.ip&&!P.q)P.q='Soft';show()}else logPitch(d.out)}
  else if(d.q){P.q=P.q===d.q?'':d.q;show()}
  else if(d.res){logPitch('ip',d.res)}
  else if(d.del){try{await C('abs').doc(d.del).delete()}catch(x){toast('Could not delete')}}
